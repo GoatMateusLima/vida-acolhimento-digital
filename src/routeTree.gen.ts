@@ -35,10 +35,15 @@ import { Route as AppConversarRouteImport } from './routes/app.conversar'
 import { Route as AppComunidadesRouteImport } from './routes/app.comunidades'
 import { Route as AppCandidaturaRouteImport } from './routes/app.candidatura'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
+import { Route as AdminComunidadesRouteImport } from './routes/admin.comunidades'
 import { Route as AdminCandidaturasRouteImport } from './routes/admin.candidaturas'
+import { Route as AppComunidadesIndexRouteImport } from './routes/app.comunidades.index'
+import { Route as AdminComunidadesIndexRouteImport } from './routes/admin.comunidades.index'
+import { Route as AdminCandidaturasIndexRouteImport } from './routes/admin.candidaturas.index'
 import { Route as VolChatIdRouteImport } from './routes/vol.chat.$id'
 import { Route as AppComunidadesIdRouteImport } from './routes/app.comunidades.$id'
 import { Route as AppChatIdRouteImport } from './routes/app.chat.$id'
+import { Route as AdminComunidadesIdRouteImport } from './routes/admin.comunidades.$id'
 import { Route as AdminCandidaturasIdRouteImport } from './routes/admin.candidaturas.$id'
 
 const TermosRoute = TermosRouteImport.update({
@@ -171,10 +176,30 @@ const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
   path: '/admin/usuarios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminComunidadesRoute = AdminComunidadesRouteImport.update({
+  id: '/admin/comunidades',
+  path: '/admin/comunidades',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCandidaturasRoute = AdminCandidaturasRouteImport.update({
   id: '/admin/candidaturas',
   path: '/admin/candidaturas',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppComunidadesIndexRoute = AppComunidadesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppComunidadesRoute,
+} as any)
+const AdminComunidadesIndexRoute = AdminComunidadesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminComunidadesRoute,
+} as any)
+const AdminCandidaturasIndexRoute = AdminCandidaturasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCandidaturasRoute,
 } as any)
 const VolChatIdRoute = VolChatIdRouteImport.update({
   id: '/vol/chat/$id',
@@ -190,6 +215,11 @@ const AppChatIdRoute = AppChatIdRouteImport.update({
   id: '/app/chat/$id',
   path: '/app/chat/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminComunidadesIdRoute = AdminComunidadesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminComunidadesRoute,
 } as any)
 const AdminCandidaturasIdRoute = AdminCandidaturasIdRouteImport.update({
   id: '/$id',
@@ -208,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/admin/candidaturas': typeof AdminCandidaturasRouteWithChildren
+  '/admin/comunidades': typeof AdminComunidadesRouteWithChildren
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/candidatura': typeof AppCandidaturaRoute
   '/app/comunidades': typeof AppComunidadesRouteWithChildren
@@ -226,9 +257,13 @@ export interface FileRoutesByFullPath {
   '/mod/': typeof ModIndexRoute
   '/vol/': typeof VolIndexRoute
   '/admin/candidaturas/$id': typeof AdminCandidaturasIdRoute
+  '/admin/comunidades/$id': typeof AdminComunidadesIdRoute
   '/app/chat/$id': typeof AppChatIdRoute
   '/app/comunidades/$id': typeof AppComunidadesIdRoute
   '/vol/chat/$id': typeof VolChatIdRoute
+  '/admin/candidaturas/': typeof AdminCandidaturasIndexRoute
+  '/admin/comunidades/': typeof AdminComunidadesIndexRoute
+  '/app/comunidades/': typeof AppComunidadesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -240,10 +275,8 @@ export interface FileRoutesByTo {
   '/seguranca': typeof SegurancaRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
-  '/admin/candidaturas': typeof AdminCandidaturasRouteWithChildren
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/candidatura': typeof AppCandidaturaRoute
-  '/app/comunidades': typeof AppComunidadesRouteWithChildren
   '/app/conversar': typeof AppConversarRoute
   '/app/denuncia': typeof AppDenunciaRoute
   '/app/historico': typeof AppHistoricoRoute
@@ -259,9 +292,13 @@ export interface FileRoutesByTo {
   '/mod': typeof ModIndexRoute
   '/vol': typeof VolIndexRoute
   '/admin/candidaturas/$id': typeof AdminCandidaturasIdRoute
+  '/admin/comunidades/$id': typeof AdminComunidadesIdRoute
   '/app/chat/$id': typeof AppChatIdRoute
   '/app/comunidades/$id': typeof AppComunidadesIdRoute
   '/vol/chat/$id': typeof VolChatIdRoute
+  '/admin/candidaturas': typeof AdminCandidaturasIndexRoute
+  '/admin/comunidades': typeof AdminComunidadesIndexRoute
+  '/app/comunidades': typeof AppComunidadesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -275,6 +312,7 @@ export interface FileRoutesById {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/admin/candidaturas': typeof AdminCandidaturasRouteWithChildren
+  '/admin/comunidades': typeof AdminComunidadesRouteWithChildren
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/candidatura': typeof AppCandidaturaRoute
   '/app/comunidades': typeof AppComunidadesRouteWithChildren
@@ -293,9 +331,13 @@ export interface FileRoutesById {
   '/mod/': typeof ModIndexRoute
   '/vol/': typeof VolIndexRoute
   '/admin/candidaturas/$id': typeof AdminCandidaturasIdRoute
+  '/admin/comunidades/$id': typeof AdminComunidadesIdRoute
   '/app/chat/$id': typeof AppChatIdRoute
   '/app/comunidades/$id': typeof AppComunidadesIdRoute
   '/vol/chat/$id': typeof VolChatIdRoute
+  '/admin/candidaturas/': typeof AdminCandidaturasIndexRoute
+  '/admin/comunidades/': typeof AdminComunidadesIndexRoute
+  '/app/comunidades/': typeof AppComunidadesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -310,6 +352,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/admin/candidaturas'
+    | '/admin/comunidades'
     | '/admin/usuarios'
     | '/app/candidatura'
     | '/app/comunidades'
@@ -328,9 +371,13 @@ export interface FileRouteTypes {
     | '/mod/'
     | '/vol/'
     | '/admin/candidaturas/$id'
+    | '/admin/comunidades/$id'
     | '/app/chat/$id'
     | '/app/comunidades/$id'
     | '/vol/chat/$id'
+    | '/admin/candidaturas/'
+    | '/admin/comunidades/'
+    | '/app/comunidades/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -342,10 +389,8 @@ export interface FileRouteTypes {
     | '/seguranca'
     | '/sobre'
     | '/termos'
-    | '/admin/candidaturas'
     | '/admin/usuarios'
     | '/app/candidatura'
-    | '/app/comunidades'
     | '/app/conversar'
     | '/app/denuncia'
     | '/app/historico'
@@ -361,9 +406,13 @@ export interface FileRouteTypes {
     | '/mod'
     | '/vol'
     | '/admin/candidaturas/$id'
+    | '/admin/comunidades/$id'
     | '/app/chat/$id'
     | '/app/comunidades/$id'
     | '/vol/chat/$id'
+    | '/admin/candidaturas'
+    | '/admin/comunidades'
+    | '/app/comunidades'
   id:
     | '__root__'
     | '/'
@@ -376,6 +425,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/admin/candidaturas'
+    | '/admin/comunidades'
     | '/admin/usuarios'
     | '/app/candidatura'
     | '/app/comunidades'
@@ -394,9 +444,13 @@ export interface FileRouteTypes {
     | '/mod/'
     | '/vol/'
     | '/admin/candidaturas/$id'
+    | '/admin/comunidades/$id'
     | '/app/chat/$id'
     | '/app/comunidades/$id'
     | '/vol/chat/$id'
+    | '/admin/candidaturas/'
+    | '/admin/comunidades/'
+    | '/app/comunidades/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -410,6 +464,7 @@ export interface RootRouteChildren {
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
   AdminCandidaturasRoute: typeof AdminCandidaturasRouteWithChildren
+  AdminComunidadesRoute: typeof AdminComunidadesRouteWithChildren
   AdminUsuariosRoute: typeof AdminUsuariosRoute
   AppCandidaturaRoute: typeof AppCandidaturaRoute
   AppComunidadesRoute: typeof AppComunidadesRouteWithChildren
@@ -615,12 +670,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsuariosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/comunidades': {
+      id: '/admin/comunidades'
+      path: '/admin/comunidades'
+      fullPath: '/admin/comunidades'
+      preLoaderRoute: typeof AdminComunidadesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/candidaturas': {
       id: '/admin/candidaturas'
       path: '/admin/candidaturas'
       fullPath: '/admin/candidaturas'
       preLoaderRoute: typeof AdminCandidaturasRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/app/comunidades/': {
+      id: '/app/comunidades/'
+      path: '/'
+      fullPath: '/app/comunidades/'
+      preLoaderRoute: typeof AppComunidadesIndexRouteImport
+      parentRoute: typeof AppComunidadesRoute
+    }
+    '/admin/comunidades/': {
+      id: '/admin/comunidades/'
+      path: '/'
+      fullPath: '/admin/comunidades/'
+      preLoaderRoute: typeof AdminComunidadesIndexRouteImport
+      parentRoute: typeof AdminComunidadesRoute
+    }
+    '/admin/candidaturas/': {
+      id: '/admin/candidaturas/'
+      path: '/'
+      fullPath: '/admin/candidaturas/'
+      preLoaderRoute: typeof AdminCandidaturasIndexRouteImport
+      parentRoute: typeof AdminCandidaturasRoute
     }
     '/vol/chat/$id': {
       id: '/vol/chat/$id'
@@ -643,6 +726,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChatIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/comunidades/$id': {
+      id: '/admin/comunidades/$id'
+      path: '/$id'
+      fullPath: '/admin/comunidades/$id'
+      preLoaderRoute: typeof AdminComunidadesIdRouteImport
+      parentRoute: typeof AdminComunidadesRoute
+    }
     '/admin/candidaturas/$id': {
       id: '/admin/candidaturas/$id'
       path: '/$id'
@@ -655,21 +745,38 @@ declare module '@tanstack/react-router' {
 
 interface AdminCandidaturasRouteChildren {
   AdminCandidaturasIdRoute: typeof AdminCandidaturasIdRoute
+  AdminCandidaturasIndexRoute: typeof AdminCandidaturasIndexRoute
 }
 
 const AdminCandidaturasRouteChildren: AdminCandidaturasRouteChildren = {
   AdminCandidaturasIdRoute: AdminCandidaturasIdRoute,
+  AdminCandidaturasIndexRoute: AdminCandidaturasIndexRoute,
 }
 
 const AdminCandidaturasRouteWithChildren =
   AdminCandidaturasRoute._addFileChildren(AdminCandidaturasRouteChildren)
 
+interface AdminComunidadesRouteChildren {
+  AdminComunidadesIdRoute: typeof AdminComunidadesIdRoute
+  AdminComunidadesIndexRoute: typeof AdminComunidadesIndexRoute
+}
+
+const AdminComunidadesRouteChildren: AdminComunidadesRouteChildren = {
+  AdminComunidadesIdRoute: AdminComunidadesIdRoute,
+  AdminComunidadesIndexRoute: AdminComunidadesIndexRoute,
+}
+
+const AdminComunidadesRouteWithChildren =
+  AdminComunidadesRoute._addFileChildren(AdminComunidadesRouteChildren)
+
 interface AppComunidadesRouteChildren {
   AppComunidadesIdRoute: typeof AppComunidadesIdRoute
+  AppComunidadesIndexRoute: typeof AppComunidadesIndexRoute
 }
 
 const AppComunidadesRouteChildren: AppComunidadesRouteChildren = {
   AppComunidadesIdRoute: AppComunidadesIdRoute,
+  AppComunidadesIndexRoute: AppComunidadesIndexRoute,
 }
 
 const AppComunidadesRouteWithChildren = AppComunidadesRoute._addFileChildren(
@@ -687,6 +794,7 @@ const rootRouteChildren: RootRouteChildren = {
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
   AdminCandidaturasRoute: AdminCandidaturasRouteWithChildren,
+  AdminComunidadesRoute: AdminComunidadesRouteWithChildren,
   AdminUsuariosRoute: AdminUsuariosRoute,
   AppCandidaturaRoute: AppCandidaturaRoute,
   AppComunidadesRoute: AppComunidadesRouteWithChildren,

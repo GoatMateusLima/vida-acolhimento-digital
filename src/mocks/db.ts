@@ -1,5 +1,7 @@
 import type {
   Application,
+  AdminCommunity,
+  AdminCommunityMember,
   ChatMessage,
   Community,
   CommunityMessage,
@@ -165,6 +167,61 @@ export const mockCommunityMessages: Record<string, CommunityMessage[]> = {
   ],
   g3: [],
 };
+
+export const mockAdminCommunityMembers: Record<string, AdminCommunityMember[]> = {
+  g1: [
+    {
+      userId: "u1",
+      name: "Ana Beatriz",
+      email: "ana@exemplo.com",
+      alias: "Girassol Calmo 27",
+      role: "usuario",
+      status: "ativo",
+      joinedAt: minusMin(60 * 24 * 10),
+      messageCount: 18,
+    },
+    {
+      userId: "u5",
+      name: "Juliana Rocha",
+      email: "juliana@exemplo.com",
+      alias: "Nuvem Serena 14",
+      role: "usuario",
+      status: "ativo",
+      joinedAt: minusMin(60 * 24 * 6),
+      messageCount: 9,
+    },
+    {
+      userId: "u6",
+      name: "Pedro Alves",
+      email: "pedro@exemplo.com",
+      alias: "Lua Gentil 08",
+      role: "usuario",
+      status: "ativo",
+      joinedAt: minusMin(60 * 24 * 3),
+      messageCount: 6,
+    },
+  ],
+  g2: [
+    {
+      userId: "u7",
+      name: "Camila Martins",
+      email: "camila@exemplo.com",
+      alias: "Brisa Leve 31",
+      role: "usuario",
+      status: "ativo",
+      joinedAt: minusMin(60 * 24 * 2),
+      messageCount: 12,
+    },
+  ],
+  g3: [],
+};
+
+export const mockAdminCommunities: AdminCommunity[] = mockCommunities.map((community, index) => ({
+  ...community,
+  status: index === 2 ? "pausado" : "ativo",
+  messageCount: Object.values(mockCommunityMessages[community.id] ?? {}).length,
+  createdAt: minusMin(60 * 24 * (30 + index * 4)),
+}));
 
 export const mockMessages: Record<string, ChatMessage[]> = {
   c1: [

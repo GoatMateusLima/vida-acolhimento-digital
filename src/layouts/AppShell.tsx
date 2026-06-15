@@ -46,6 +46,7 @@ const NAV: Record<ProfileRole, Item[]> = {
     { to: "/admin", label: "Dashboard", icon: BarChart3 },
     { to: "/admin/candidaturas", label: "Candidaturas", icon: ClipboardList },
     { to: "/admin/usuarios", label: "Usuários", icon: Users },
+    { to: "/admin/comunidades", label: "Grupos", icon: UsersRound },
   ],
 };
 

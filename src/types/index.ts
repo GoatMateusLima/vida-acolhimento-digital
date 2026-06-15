@@ -130,3 +130,27 @@ export interface CommunityIdentity {
   reason: string;
   revealedAt: string;
 }
+
+export type AdminCommunityStatus = "ativo" | "pausado" | "arquivado";
+
+export interface AdminCommunity extends Community {
+  status: AdminCommunityStatus;
+  messageCount: number;
+  createdAt: string;
+}
+
+export interface AdminCommunityMember {
+  userId: string;
+  name: string;
+  email: string;
+  alias: string;
+  role: ProfileRole;
+  status: "ativo" | "removido";
+  joinedAt: string;
+  messageCount: number;
+}
+
+export interface AdminCommunityDetail extends AdminCommunity {
+  members: AdminCommunityMember[];
+  messages: CommunityMessage[];
+}

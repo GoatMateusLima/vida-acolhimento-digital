@@ -1,4 +1,4 @@
-const CACHE_NAME = "vida-plus-shell-v1";
+const CACHE_NAME = "vida-plus-shell-v2";
 const STATIC_ASSETS = [
   "/",
   "/offline.html",
@@ -35,7 +35,20 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (["style", "script", "image", "font"].includes(request.destination)) {
+  if (["style", "script"].includes(request.destination)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request)),
+    );
+    return;
+  }
+
+  if (["image", "font"].includes(request.destination)) {
     event.respondWith(
       caches.match(request).then(
         (cached) =>

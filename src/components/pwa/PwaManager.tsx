@@ -8,7 +8,24 @@ export function PwaManager() {
     if (registered || typeof window === "undefined" || !("serviceWorker" in navigator)) return;
     const register = async () => {
       try {
-        const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+        if (import.meta.env.DEV) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((registration) => registration.unregister()));
+          const cacheKeys = await caches.keys();
+          await Promise.all(
+            cacheKeys
+              .filter((key) => key.startsWith("vida-plus-"))
+              .map((key) => caches.delete(key)),
+          );
+          setRegistered(true);
+          return;
+        }
+
+        const registration = await navigator.serviceWorker.register("/sw.js", {
+          scope: "/",
+          updateViaCache: "none",
+        });
+        await registration.update();
         setRegistered(true);
         registration.addEventListener("updatefound", () => {
           const worker = registration.installing;

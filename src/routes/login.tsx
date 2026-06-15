@@ -18,7 +18,7 @@ export const Route = createFileRoute("/login")({
 
 function Page() {
   const navigate = useNavigate();
-  const { setAuthenticated } = useProfile();
+  const { setAuthenticated, setRole } = useProfile();
   const {
     register,
     handleSubmit,
@@ -36,6 +36,16 @@ function Page() {
       navigate({ to: "/app" });
     },
     onError: () => toast.error("Não foi possível entrar. Tente novamente."),
+  });
+  const anonymous = useMutation({
+    mutationFn: authService.continueAnonymously,
+    onSuccess: () => {
+      setRole("usuario");
+      setAuthenticated(true);
+      toast.success("Você entrou anonimamente.");
+      navigate({ to: "/app/comunidades" });
+    },
+    onError: () => toast.error("Não foi possível iniciar o acesso anônimo."),
   });
 
   return (
@@ -64,6 +74,23 @@ function Page() {
         <Button type="submit" className="h-11 w-full" disabled={m.isPending}>
           {m.isPending ? "Entrando…" : "Entrar"}
         </Button>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          ou
+          <span className="h-px flex-1 bg-border" />
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-full"
+          disabled={anonymous.isPending}
+          onClick={() => anonymous.mutate()}
+        >
+          {anonymous.isPending ? "Preparando acesso..." : "Continuar anonimamente"}
+        </Button>
+        <p className="text-center text-xs text-muted-foreground">
+          Nos grupos, outras pessoas verão somente seu apelido.
+        </p>
         <div className="flex justify-between text-sm">
           <Link to="/recuperar-senha" className="text-primary hover:underline">
             Esqueci minha senha

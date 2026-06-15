@@ -1,5 +1,7 @@
 import {
   mockApplications,
+  mockAdminCommunities,
+  mockAdminCommunityMembers,
   mockCommunities,
   mockCommunityMessages,
   mockConversations,
@@ -13,6 +15,9 @@ import {
 import { cloneDeep, delay } from "@/mocks/handlers";
 import type {
   Application,
+  AdminCommunity,
+  AdminCommunityDetail,
+  AdminCommunityStatus,
   ApplicationStatus,
   ChatMessage,
   Community,
@@ -45,6 +50,16 @@ export const authService = {
         .slice(0, 2)
         .join("")
         .toUpperCase(),
+      role: "usuario",
+      joinedAt: new Date().toISOString(),
+    });
+  },
+  async continueAnonymously(): Promise<User> {
+    return delay({
+      id: `anonymous-${Date.now()}`,
+      name: "Pessoa anônima",
+      email: "",
+      initials: "A",
       role: "usuario",
       joinedAt: new Date().toISOString(),
     });
@@ -240,6 +255,71 @@ export const communityService = {
       reason: reason.trim(),
       revealedAt: new Date().toISOString(),
     });
+  },
+};
+
+export const adminCommunityService = {
+  async list(): Promise<AdminCommunity[]> {
+    return delay(cloneDeep(mockAdminCommunities));
+  },
+  async get(id: string): Promise<AdminCommunityDetail> {
+    const community = mockAdminCommunities.find((item) => item.id === id);
+    if (!community) throw new Error("Grupo não encontrado");
+    return delay({
+      ...cloneDeep(community),
+      members: cloneDeep(mockAdminCommunityMembers[id] ?? []),
+      messages: cloneDeep(mockCommunityMessages[id] ?? []),
+    });
+  },
+  async create(input: { name: string; description: string }): Promise<AdminCommunity> {
+    const community: AdminCommunity = {
+      id: `g-${Date.now()}`,
+      name: input.name,
+      description: input.description,
+      topic: "Novo grupo",
+      memberCount: 0,
+      onlineCount: 0,
+      joined: false,
+      rules: [],
+      status: "ativo",
+      messageCount: 0,
+      createdAt: new Date().toISOString(),
+    };
+    mockAdminCommunities.unshift(community);
+    mockAdminCommunityMembers[community.id] = [];
+    mockCommunityMessages[community.id] = [];
+    return delay(cloneDeep(community));
+  },
+  async updateStatus(id: string, status: AdminCommunityStatus): Promise<AdminCommunity> {
+    const community = mockAdminCommunities.find((item) => item.id === id);
+    if (!community) throw new Error("Grupo não encontrado");
+    community.status = status;
+    return delay(cloneDeep(community));
+  },
+  async update(id: string, input: { name: string; description: string }): Promise<AdminCommunity> {
+    const community = mockAdminCommunities.find((item) => item.id === id);
+    if (!community) throw new Error("Grupo não encontrado");
+    community.name = input.name;
+    community.description = input.description;
+    return delay(cloneDeep(community));
+  },
+  async updateMember(
+    communityId: string,
+    userId: string,
+    status: "ativo" | "removido",
+  ): Promise<{ ok: true }> {
+    const member = mockAdminCommunityMembers[communityId]?.find((item) => item.userId === userId);
+    if (!member) throw new Error("Participante não encontrado");
+    member.status = status;
+    return delay({ ok: true });
+  },
+  async deleteMessage(communityId: string, messageId: string): Promise<{ ok: true }> {
+    mockCommunityMessages[communityId] = (mockCommunityMessages[communityId] ?? []).filter(
+      (message) => message.id !== messageId,
+    );
+    const community = mockAdminCommunities.find((item) => item.id === communityId);
+    if (community) community.messageCount = Math.max(0, community.messageCount - 1);
+    return delay({ ok: true });
   },
 };
 

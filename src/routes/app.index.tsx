@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { MessageCircleHeart, History, Heart, Sparkles } from "lucide-react";
+import { MessageCircleHeart, History, Heart, Sparkles, UsersRound } from "lucide-react";
 import { AppShell } from "@/layouts/AppShell";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -25,7 +25,7 @@ function Page() {
         description="Como você está se sentindo hoje? Se quiser conversar, estamos aqui."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link
           to="/app/conversar"
           className="group relative overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground shadow-soft transition hover:opacity-95"
@@ -36,6 +36,20 @@ function Page() {
           <p className="mt-1 text-sm opacity-90">Encontre um voluntário disponível.</p>
           <span className="mt-4 inline-block text-sm font-medium underline-offset-4 group-hover:underline">
             Entrar na fila →
+          </span>
+        </Link>
+
+        <Link
+          to="/app/comunidades"
+          className="group rounded-3xl border border-primary/20 bg-primary/5 p-6 shadow-soft transition hover:bg-primary/10"
+        >
+          <UsersRound className="h-7 w-7 text-primary" />
+          <h2 className="mt-4 font-display text-2xl font-semibold">Grupos de apoio</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Converse em comunidade usando um apelido anônimo.
+          </p>
+          <span className="mt-4 inline-block text-sm font-medium text-primary underline-offset-4 group-hover:underline">
+            Ver grupos →
           </span>
         </Link>
 
