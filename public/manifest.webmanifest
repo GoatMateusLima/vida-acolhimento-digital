@@ -1,0 +1,19 @@
+{
+  "name": "VIDA+ — Acolhimento e escuta emocional",
+  "short_name": "VIDA+",
+  "description": "Acolhimento e escuta emocional, anônimo e seguro.",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F7F3",
+  "theme_color": "#7BA889",
+  "lang": "pt-BR",
+  "categories": ["health", "lifestyle", "social"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
