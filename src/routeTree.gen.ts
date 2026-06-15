@@ -18,6 +18,15 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppPrivacidadeRouteImport } from './routes/app.privacidade'
+import { Route as AppPreferenciasRouteImport } from './routes/app.preferencias'
+import { Route as AppPerfilRouteImport } from './routes/app.perfil'
+import { Route as AppHistoricoRouteImport } from './routes/app.historico'
+import { Route as AppDenunciaRouteImport } from './routes/app.denuncia'
+import { Route as AppConversarRouteImport } from './routes/app.conversar'
+import { Route as AppCandidaturaRouteImport } from './routes/app.candidatura'
+import { Route as AppChatIdRouteImport } from './routes/app.chat.$id'
 
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
@@ -64,6 +73,51 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppPrivacidadeRoute = AppPrivacidadeRouteImport.update({
+  id: '/app/privacidade',
+  path: '/app/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppPreferenciasRoute = AppPreferenciasRouteImport.update({
+  id: '/app/preferencias',
+  path: '/app/preferencias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppPerfilRoute = AppPerfilRouteImport.update({
+  id: '/app/perfil',
+  path: '/app/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppHistoricoRoute = AppHistoricoRouteImport.update({
+  id: '/app/historico',
+  path: '/app/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppDenunciaRoute = AppDenunciaRouteImport.update({
+  id: '/app/denuncia',
+  path: '/app/denuncia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppConversarRoute = AppConversarRouteImport.update({
+  id: '/app/conversar',
+  path: '/app/conversar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppCandidaturaRoute = AppCandidaturaRouteImport.update({
+  id: '/app/candidatura',
+  path: '/app/candidatura',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppChatIdRoute = AppChatIdRouteImport.update({
+  id: '/app/chat/$id',
+  path: '/app/chat/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +129,15 @@ export interface FileRoutesByFullPath {
   '/seguranca': typeof SegurancaRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/app/candidatura': typeof AppCandidaturaRoute
+  '/app/conversar': typeof AppConversarRoute
+  '/app/denuncia': typeof AppDenunciaRoute
+  '/app/historico': typeof AppHistoricoRoute
+  '/app/perfil': typeof AppPerfilRoute
+  '/app/preferencias': typeof AppPreferenciasRoute
+  '/app/privacidade': typeof AppPrivacidadeRoute
+  '/app/': typeof AppIndexRoute
+  '/app/chat/$id': typeof AppChatIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +149,15 @@ export interface FileRoutesByTo {
   '/seguranca': typeof SegurancaRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/app/candidatura': typeof AppCandidaturaRoute
+  '/app/conversar': typeof AppConversarRoute
+  '/app/denuncia': typeof AppDenunciaRoute
+  '/app/historico': typeof AppHistoricoRoute
+  '/app/perfil': typeof AppPerfilRoute
+  '/app/preferencias': typeof AppPreferenciasRoute
+  '/app/privacidade': typeof AppPrivacidadeRoute
+  '/app': typeof AppIndexRoute
+  '/app/chat/$id': typeof AppChatIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +170,15 @@ export interface FileRoutesById {
   '/seguranca': typeof SegurancaRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/app/candidatura': typeof AppCandidaturaRoute
+  '/app/conversar': typeof AppConversarRoute
+  '/app/denuncia': typeof AppDenunciaRoute
+  '/app/historico': typeof AppHistoricoRoute
+  '/app/perfil': typeof AppPerfilRoute
+  '/app/preferencias': typeof AppPreferenciasRoute
+  '/app/privacidade': typeof AppPrivacidadeRoute
+  '/app/': typeof AppIndexRoute
+  '/app/chat/$id': typeof AppChatIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +192,15 @@ export interface FileRouteTypes {
     | '/seguranca'
     | '/sobre'
     | '/termos'
+    | '/app/candidatura'
+    | '/app/conversar'
+    | '/app/denuncia'
+    | '/app/historico'
+    | '/app/perfil'
+    | '/app/preferencias'
+    | '/app/privacidade'
+    | '/app/'
+    | '/app/chat/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +212,15 @@ export interface FileRouteTypes {
     | '/seguranca'
     | '/sobre'
     | '/termos'
+    | '/app/candidatura'
+    | '/app/conversar'
+    | '/app/denuncia'
+    | '/app/historico'
+    | '/app/perfil'
+    | '/app/preferencias'
+    | '/app/privacidade'
+    | '/app'
+    | '/app/chat/$id'
   id:
     | '__root__'
     | '/'
@@ -133,6 +232,15 @@ export interface FileRouteTypes {
     | '/seguranca'
     | '/sobre'
     | '/termos'
+    | '/app/candidatura'
+    | '/app/conversar'
+    | '/app/denuncia'
+    | '/app/historico'
+    | '/app/perfil'
+    | '/app/preferencias'
+    | '/app/privacidade'
+    | '/app/'
+    | '/app/chat/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +253,15 @@ export interface RootRouteChildren {
   SegurancaRoute: typeof SegurancaRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
+  AppCandidaturaRoute: typeof AppCandidaturaRoute
+  AppConversarRoute: typeof AppConversarRoute
+  AppDenunciaRoute: typeof AppDenunciaRoute
+  AppHistoricoRoute: typeof AppHistoricoRoute
+  AppPerfilRoute: typeof AppPerfilRoute
+  AppPreferenciasRoute: typeof AppPreferenciasRoute
+  AppPrivacidadeRoute: typeof AppPrivacidadeRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppChatIdRoute: typeof AppChatIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +329,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/privacidade': {
+      id: '/app/privacidade'
+      path: '/app/privacidade'
+      fullPath: '/app/privacidade'
+      preLoaderRoute: typeof AppPrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/preferencias': {
+      id: '/app/preferencias'
+      path: '/app/preferencias'
+      fullPath: '/app/preferencias'
+      preLoaderRoute: typeof AppPreferenciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/perfil': {
+      id: '/app/perfil'
+      path: '/app/perfil'
+      fullPath: '/app/perfil'
+      preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/historico': {
+      id: '/app/historico'
+      path: '/app/historico'
+      fullPath: '/app/historico'
+      preLoaderRoute: typeof AppHistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/denuncia': {
+      id: '/app/denuncia'
+      path: '/app/denuncia'
+      fullPath: '/app/denuncia'
+      preLoaderRoute: typeof AppDenunciaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/conversar': {
+      id: '/app/conversar'
+      path: '/app/conversar'
+      fullPath: '/app/conversar'
+      preLoaderRoute: typeof AppConversarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/candidatura': {
+      id: '/app/candidatura'
+      path: '/app/candidatura'
+      fullPath: '/app/candidatura'
+      preLoaderRoute: typeof AppCandidaturaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/chat/$id': {
+      id: '/app/chat/$id'
+      path: '/app/chat/$id'
+      fullPath: '/app/chat/$id'
+      preLoaderRoute: typeof AppChatIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +405,15 @@ const rootRouteChildren: RootRouteChildren = {
   SegurancaRoute: SegurancaRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
+  AppCandidaturaRoute: AppCandidaturaRoute,
+  AppConversarRoute: AppConversarRoute,
+  AppDenunciaRoute: AppDenunciaRoute,
+  AppHistoricoRoute: AppHistoricoRoute,
+  AppPerfilRoute: AppPerfilRoute,
+  AppPreferenciasRoute: AppPreferenciasRoute,
+  AppPrivacidadeRoute: AppPrivacidadeRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppChatIdRoute: AppChatIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
