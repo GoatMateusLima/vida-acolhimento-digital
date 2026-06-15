@@ -12,8 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SegurancaRouteImport } from './routes/seguranca'
+import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
+import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TermosRoute = TermosRouteImport.update({
@@ -31,14 +34,29 @@ const SegurancaRoute = SegurancaRouteImport.update({
   path: '/seguranca',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
   id: '/como-funciona',
   path: '/como-funciona',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,16 +67,22 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/seguranca': typeof SegurancaRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/seguranca': typeof SegurancaRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -66,8 +90,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/seguranca': typeof SegurancaRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -76,24 +103,33 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/cadastro'
     | '/como-funciona'
+    | '/login'
     | '/privacidade'
+    | '/recuperar-senha'
     | '/seguranca'
     | '/sobre'
     | '/termos'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/cadastro'
     | '/como-funciona'
+    | '/login'
     | '/privacidade'
+    | '/recuperar-senha'
     | '/seguranca'
     | '/sobre'
     | '/termos'
   id:
     | '__root__'
     | '/'
+    | '/cadastro'
     | '/como-funciona'
+    | '/login'
     | '/privacidade'
+    | '/recuperar-senha'
     | '/seguranca'
     | '/sobre'
     | '/termos'
@@ -101,8 +137,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CadastroRoute: typeof CadastroRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
+  LoginRoute: typeof LoginRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
+  RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   SegurancaRoute: typeof SegurancaRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
@@ -131,6 +170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SegurancaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recuperar-senha': {
+      id: '/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof RecuperarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacidade': {
       id: '/privacidade'
       path: '/privacidade'
@@ -138,11 +184,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/como-funciona': {
       id: '/como-funciona'
       path: '/como-funciona'
       fullPath: '/como-funciona'
       preLoaderRoute: typeof ComoFuncionaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -157,8 +217,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CadastroRoute: CadastroRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
+  LoginRoute: LoginRoute,
   PrivacidadeRoute: PrivacidadeRoute,
+  RecuperarSenhaRoute: RecuperarSenhaRoute,
   SegurancaRoute: SegurancaRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
