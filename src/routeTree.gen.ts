@@ -9,38 +9,461 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosRouteImport } from './routes/termos'
+import { Route as SobreRouteImport } from './routes/sobre'
+import { Route as SegurancaRouteImport } from './routes/seguranca'
+import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
+import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VolIndexRouteImport } from './routes/vol.index'
+import { Route as ModIndexRouteImport } from './routes/mod.index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as VolHistoricoRouteImport } from './routes/vol.historico'
+import { Route as VolFilaRouteImport } from './routes/vol.fila'
+import { Route as VolCandidaturaRouteImport } from './routes/vol.candidatura'
+import { Route as ModIdRouteImport } from './routes/mod.$id'
+import { Route as AppPrivacidadeRouteImport } from './routes/app.privacidade'
+import { Route as AppPreferenciasRouteImport } from './routes/app.preferencias'
+import { Route as AppPerfilRouteImport } from './routes/app.perfil'
+import { Route as AppHistoricoRouteImport } from './routes/app.historico'
+import { Route as AppDenunciaRouteImport } from './routes/app.denuncia'
+import { Route as AppConversarRouteImport } from './routes/app.conversar'
+import { Route as AppCandidaturaRouteImport } from './routes/app.candidatura'
+import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
+import { Route as AdminCandidaturasRouteImport } from './routes/admin.candidaturas'
+import { Route as VolChatIdRouteImport } from './routes/vol.chat.$id'
+import { Route as AppChatIdRouteImport } from './routes/app.chat.$id'
+import { Route as AdminCandidaturasIdRouteImport } from './routes/admin.candidaturas.$id'
 
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SobreRoute = SobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SegurancaRoute = SegurancaRouteImport.update({
+  id: '/seguranca',
+  path: '/seguranca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
+  id: '/como-funciona',
+  path: '/como-funciona',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VolIndexRoute = VolIndexRouteImport.update({
+  id: '/vol/',
+  path: '/vol/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModIndexRoute = ModIndexRouteImport.update({
+  id: '/mod/',
+  path: '/mod/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VolHistoricoRoute = VolHistoricoRouteImport.update({
+  id: '/vol/historico',
+  path: '/vol/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VolFilaRoute = VolFilaRouteImport.update({
+  id: '/vol/fila',
+  path: '/vol/fila',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VolCandidaturaRoute = VolCandidaturaRouteImport.update({
+  id: '/vol/candidatura',
+  path: '/vol/candidatura',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModIdRoute = ModIdRouteImport.update({
+  id: '/mod/$id',
+  path: '/mod/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppPrivacidadeRoute = AppPrivacidadeRouteImport.update({
+  id: '/app/privacidade',
+  path: '/app/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppPreferenciasRoute = AppPreferenciasRouteImport.update({
+  id: '/app/preferencias',
+  path: '/app/preferencias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppPerfilRoute = AppPerfilRouteImport.update({
+  id: '/app/perfil',
+  path: '/app/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppHistoricoRoute = AppHistoricoRouteImport.update({
+  id: '/app/historico',
+  path: '/app/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppDenunciaRoute = AppDenunciaRouteImport.update({
+  id: '/app/denuncia',
+  path: '/app/denuncia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppConversarRoute = AppConversarRouteImport.update({
+  id: '/app/conversar',
+  path: '/app/conversar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppCandidaturaRoute = AppCandidaturaRouteImport.update({
+  id: '/app/candidatura',
+  path: '/app/candidatura',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
+  id: '/admin/usuarios',
+  path: '/admin/usuarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCandidaturasRoute = AdminCandidaturasRouteImport.update({
+  id: '/admin/candidaturas',
+  path: '/admin/candidaturas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VolChatIdRoute = VolChatIdRouteImport.update({
+  id: '/vol/chat/$id',
+  path: '/vol/chat/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppChatIdRoute = AppChatIdRouteImport.update({
+  id: '/app/chat/$id',
+  path: '/app/chat/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCandidaturasIdRoute = AdminCandidaturasIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminCandidaturasRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/seguranca': typeof SegurancaRoute
+  '/sobre': typeof SobreRoute
+  '/termos': typeof TermosRoute
+  '/admin/candidaturas': typeof AdminCandidaturasRouteWithChildren
+  '/admin/usuarios': typeof AdminUsuariosRoute
+  '/app/candidatura': typeof AppCandidaturaRoute
+  '/app/conversar': typeof AppConversarRoute
+  '/app/denuncia': typeof AppDenunciaRoute
+  '/app/historico': typeof AppHistoricoRoute
+  '/app/perfil': typeof AppPerfilRoute
+  '/app/preferencias': typeof AppPreferenciasRoute
+  '/app/privacidade': typeof AppPrivacidadeRoute
+  '/mod/$id': typeof ModIdRoute
+  '/vol/candidatura': typeof VolCandidaturaRoute
+  '/vol/fila': typeof VolFilaRoute
+  '/vol/historico': typeof VolHistoricoRoute
+  '/admin/': typeof AdminIndexRoute
+  '/app/': typeof AppIndexRoute
+  '/mod/': typeof ModIndexRoute
+  '/vol/': typeof VolIndexRoute
+  '/admin/candidaturas/$id': typeof AdminCandidaturasIdRoute
+  '/app/chat/$id': typeof AppChatIdRoute
+  '/vol/chat/$id': typeof VolChatIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/seguranca': typeof SegurancaRoute
+  '/sobre': typeof SobreRoute
+  '/termos': typeof TermosRoute
+  '/admin/candidaturas': typeof AdminCandidaturasRouteWithChildren
+  '/admin/usuarios': typeof AdminUsuariosRoute
+  '/app/candidatura': typeof AppCandidaturaRoute
+  '/app/conversar': typeof AppConversarRoute
+  '/app/denuncia': typeof AppDenunciaRoute
+  '/app/historico': typeof AppHistoricoRoute
+  '/app/perfil': typeof AppPerfilRoute
+  '/app/preferencias': typeof AppPreferenciasRoute
+  '/app/privacidade': typeof AppPrivacidadeRoute
+  '/mod/$id': typeof ModIdRoute
+  '/vol/candidatura': typeof VolCandidaturaRoute
+  '/vol/fila': typeof VolFilaRoute
+  '/vol/historico': typeof VolHistoricoRoute
+  '/admin': typeof AdminIndexRoute
+  '/app': typeof AppIndexRoute
+  '/mod': typeof ModIndexRoute
+  '/vol': typeof VolIndexRoute
+  '/admin/candidaturas/$id': typeof AdminCandidaturasIdRoute
+  '/app/chat/$id': typeof AppChatIdRoute
+  '/vol/chat/$id': typeof VolChatIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/seguranca': typeof SegurancaRoute
+  '/sobre': typeof SobreRoute
+  '/termos': typeof TermosRoute
+  '/admin/candidaturas': typeof AdminCandidaturasRouteWithChildren
+  '/admin/usuarios': typeof AdminUsuariosRoute
+  '/app/candidatura': typeof AppCandidaturaRoute
+  '/app/conversar': typeof AppConversarRoute
+  '/app/denuncia': typeof AppDenunciaRoute
+  '/app/historico': typeof AppHistoricoRoute
+  '/app/perfil': typeof AppPerfilRoute
+  '/app/preferencias': typeof AppPreferenciasRoute
+  '/app/privacidade': typeof AppPrivacidadeRoute
+  '/mod/$id': typeof ModIdRoute
+  '/vol/candidatura': typeof VolCandidaturaRoute
+  '/vol/fila': typeof VolFilaRoute
+  '/vol/historico': typeof VolHistoricoRoute
+  '/admin/': typeof AdminIndexRoute
+  '/app/': typeof AppIndexRoute
+  '/mod/': typeof ModIndexRoute
+  '/vol/': typeof VolIndexRoute
+  '/admin/candidaturas/$id': typeof AdminCandidaturasIdRoute
+  '/app/chat/$id': typeof AppChatIdRoute
+  '/vol/chat/$id': typeof VolChatIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/cadastro'
+    | '/como-funciona'
+    | '/login'
+    | '/privacidade'
+    | '/recuperar-senha'
+    | '/seguranca'
+    | '/sobre'
+    | '/termos'
+    | '/admin/candidaturas'
+    | '/admin/usuarios'
+    | '/app/candidatura'
+    | '/app/conversar'
+    | '/app/denuncia'
+    | '/app/historico'
+    | '/app/perfil'
+    | '/app/preferencias'
+    | '/app/privacidade'
+    | '/mod/$id'
+    | '/vol/candidatura'
+    | '/vol/fila'
+    | '/vol/historico'
+    | '/admin/'
+    | '/app/'
+    | '/mod/'
+    | '/vol/'
+    | '/admin/candidaturas/$id'
+    | '/app/chat/$id'
+    | '/vol/chat/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/cadastro'
+    | '/como-funciona'
+    | '/login'
+    | '/privacidade'
+    | '/recuperar-senha'
+    | '/seguranca'
+    | '/sobre'
+    | '/termos'
+    | '/admin/candidaturas'
+    | '/admin/usuarios'
+    | '/app/candidatura'
+    | '/app/conversar'
+    | '/app/denuncia'
+    | '/app/historico'
+    | '/app/perfil'
+    | '/app/preferencias'
+    | '/app/privacidade'
+    | '/mod/$id'
+    | '/vol/candidatura'
+    | '/vol/fila'
+    | '/vol/historico'
+    | '/admin'
+    | '/app'
+    | '/mod'
+    | '/vol'
+    | '/admin/candidaturas/$id'
+    | '/app/chat/$id'
+    | '/vol/chat/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/cadastro'
+    | '/como-funciona'
+    | '/login'
+    | '/privacidade'
+    | '/recuperar-senha'
+    | '/seguranca'
+    | '/sobre'
+    | '/termos'
+    | '/admin/candidaturas'
+    | '/admin/usuarios'
+    | '/app/candidatura'
+    | '/app/conversar'
+    | '/app/denuncia'
+    | '/app/historico'
+    | '/app/perfil'
+    | '/app/preferencias'
+    | '/app/privacidade'
+    | '/mod/$id'
+    | '/vol/candidatura'
+    | '/vol/fila'
+    | '/vol/historico'
+    | '/admin/'
+    | '/app/'
+    | '/mod/'
+    | '/vol/'
+    | '/admin/candidaturas/$id'
+    | '/app/chat/$id'
+    | '/vol/chat/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CadastroRoute: typeof CadastroRoute
+  ComoFuncionaRoute: typeof ComoFuncionaRoute
+  LoginRoute: typeof LoginRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
+  RecuperarSenhaRoute: typeof RecuperarSenhaRoute
+  SegurancaRoute: typeof SegurancaRoute
+  SobreRoute: typeof SobreRoute
+  TermosRoute: typeof TermosRoute
+  AdminCandidaturasRoute: typeof AdminCandidaturasRouteWithChildren
+  AdminUsuariosRoute: typeof AdminUsuariosRoute
+  AppCandidaturaRoute: typeof AppCandidaturaRoute
+  AppConversarRoute: typeof AppConversarRoute
+  AppDenunciaRoute: typeof AppDenunciaRoute
+  AppHistoricoRoute: typeof AppHistoricoRoute
+  AppPerfilRoute: typeof AppPerfilRoute
+  AppPreferenciasRoute: typeof AppPreferenciasRoute
+  AppPrivacidadeRoute: typeof AppPrivacidadeRoute
+  ModIdRoute: typeof ModIdRoute
+  VolCandidaturaRoute: typeof VolCandidaturaRoute
+  VolFilaRoute: typeof VolFilaRoute
+  VolHistoricoRoute: typeof VolHistoricoRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AppIndexRoute: typeof AppIndexRoute
+  ModIndexRoute: typeof ModIndexRoute
+  VolIndexRoute: typeof VolIndexRoute
+  AppChatIdRoute: typeof AppChatIdRoute
+  VolChatIdRoute: typeof VolChatIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sobre': {
+      id: '/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof SobreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seguranca': {
+      id: '/seguranca'
+      path: '/seguranca'
+      fullPath: '/seguranca'
+      preLoaderRoute: typeof SegurancaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recuperar-senha': {
+      id: '/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof RecuperarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/como-funciona': {
+      id: '/como-funciona'
+      path: '/como-funciona'
+      fullPath: '/como-funciona'
+      preLoaderRoute: typeof ComoFuncionaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +471,190 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vol/': {
+      id: '/vol/'
+      path: '/vol'
+      fullPath: '/vol/'
+      preLoaderRoute: typeof VolIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mod/': {
+      id: '/mod/'
+      path: '/mod'
+      fullPath: '/mod/'
+      preLoaderRoute: typeof ModIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/': {
+      id: '/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vol/historico': {
+      id: '/vol/historico'
+      path: '/vol/historico'
+      fullPath: '/vol/historico'
+      preLoaderRoute: typeof VolHistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vol/fila': {
+      id: '/vol/fila'
+      path: '/vol/fila'
+      fullPath: '/vol/fila'
+      preLoaderRoute: typeof VolFilaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vol/candidatura': {
+      id: '/vol/candidatura'
+      path: '/vol/candidatura'
+      fullPath: '/vol/candidatura'
+      preLoaderRoute: typeof VolCandidaturaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mod/$id': {
+      id: '/mod/$id'
+      path: '/mod/$id'
+      fullPath: '/mod/$id'
+      preLoaderRoute: typeof ModIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/privacidade': {
+      id: '/app/privacidade'
+      path: '/app/privacidade'
+      fullPath: '/app/privacidade'
+      preLoaderRoute: typeof AppPrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/preferencias': {
+      id: '/app/preferencias'
+      path: '/app/preferencias'
+      fullPath: '/app/preferencias'
+      preLoaderRoute: typeof AppPreferenciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/perfil': {
+      id: '/app/perfil'
+      path: '/app/perfil'
+      fullPath: '/app/perfil'
+      preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/historico': {
+      id: '/app/historico'
+      path: '/app/historico'
+      fullPath: '/app/historico'
+      preLoaderRoute: typeof AppHistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/denuncia': {
+      id: '/app/denuncia'
+      path: '/app/denuncia'
+      fullPath: '/app/denuncia'
+      preLoaderRoute: typeof AppDenunciaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/conversar': {
+      id: '/app/conversar'
+      path: '/app/conversar'
+      fullPath: '/app/conversar'
+      preLoaderRoute: typeof AppConversarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/candidatura': {
+      id: '/app/candidatura'
+      path: '/app/candidatura'
+      fullPath: '/app/candidatura'
+      preLoaderRoute: typeof AppCandidaturaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/usuarios': {
+      id: '/admin/usuarios'
+      path: '/admin/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminUsuariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/candidaturas': {
+      id: '/admin/candidaturas'
+      path: '/admin/candidaturas'
+      fullPath: '/admin/candidaturas'
+      preLoaderRoute: typeof AdminCandidaturasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vol/chat/$id': {
+      id: '/vol/chat/$id'
+      path: '/vol/chat/$id'
+      fullPath: '/vol/chat/$id'
+      preLoaderRoute: typeof VolChatIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/chat/$id': {
+      id: '/app/chat/$id'
+      path: '/app/chat/$id'
+      fullPath: '/app/chat/$id'
+      preLoaderRoute: typeof AppChatIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/candidaturas/$id': {
+      id: '/admin/candidaturas/$id'
+      path: '/$id'
+      fullPath: '/admin/candidaturas/$id'
+      preLoaderRoute: typeof AdminCandidaturasIdRouteImport
+      parentRoute: typeof AdminCandidaturasRoute
+    }
   }
 }
 
+interface AdminCandidaturasRouteChildren {
+  AdminCandidaturasIdRoute: typeof AdminCandidaturasIdRoute
+}
+
+const AdminCandidaturasRouteChildren: AdminCandidaturasRouteChildren = {
+  AdminCandidaturasIdRoute: AdminCandidaturasIdRoute,
+}
+
+const AdminCandidaturasRouteWithChildren =
+  AdminCandidaturasRoute._addFileChildren(AdminCandidaturasRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CadastroRoute: CadastroRoute,
+  ComoFuncionaRoute: ComoFuncionaRoute,
+  LoginRoute: LoginRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
+  RecuperarSenhaRoute: RecuperarSenhaRoute,
+  SegurancaRoute: SegurancaRoute,
+  SobreRoute: SobreRoute,
+  TermosRoute: TermosRoute,
+  AdminCandidaturasRoute: AdminCandidaturasRouteWithChildren,
+  AdminUsuariosRoute: AdminUsuariosRoute,
+  AppCandidaturaRoute: AppCandidaturaRoute,
+  AppConversarRoute: AppConversarRoute,
+  AppDenunciaRoute: AppDenunciaRoute,
+  AppHistoricoRoute: AppHistoricoRoute,
+  AppPerfilRoute: AppPerfilRoute,
+  AppPreferenciasRoute: AppPreferenciasRoute,
+  AppPrivacidadeRoute: AppPrivacidadeRoute,
+  ModIdRoute: ModIdRoute,
+  VolCandidaturaRoute: VolCandidaturaRoute,
+  VolFilaRoute: VolFilaRoute,
+  VolHistoricoRoute: VolHistoricoRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AppIndexRoute: AppIndexRoute,
+  ModIndexRoute: ModIndexRoute,
+  VolIndexRoute: VolIndexRoute,
+  AppChatIdRoute: AppChatIdRoute,
+  VolChatIdRoute: VolChatIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
