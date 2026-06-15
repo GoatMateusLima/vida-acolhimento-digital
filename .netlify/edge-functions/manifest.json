@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "functions": [
+    {
+      "path": "/*",
+      "excludedPath": [
+        "/.netlify/*"
+      ],
+      "name": "edge server handler",
+      "function": "server",
+      "generator": "nitro@3.0.260603-beta"
+    }
+  ]
+}

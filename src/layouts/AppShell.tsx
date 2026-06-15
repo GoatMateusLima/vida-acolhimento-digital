@@ -20,6 +20,7 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { Logo } from "@/components/common/Logo";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { ProfileSwitcher } from "@/components/common/ProfileSwitcher";
+import { InstallButton } from "@/components/pwa/InstallButton";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -107,6 +108,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <div className="hidden md:block" />
             <div className="flex items-center justify-end gap-2">
+              <div className="hidden sm:block">
+                <InstallButton />
+              </div>
               <ProfileSwitcher />
               <ThemeToggle />
             </div>
@@ -157,6 +161,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                           item={{ to: "/app/denuncia", label: "Denunciar", icon: FileWarning }}
                           close={() => setMoreOpen(false)}
                         />
+                        <div className="mt-1" onClick={() => setMoreOpen(false)}>
+                          <InstallButton fullWidth />
+                        </div>
                         <Link
                           to="/login"
                           onClick={() => {
