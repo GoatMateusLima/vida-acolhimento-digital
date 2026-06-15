@@ -7,7 +7,9 @@ export const Route = createFileRoute("/vol/fila")({
   component: () => (
     <AppShell>
       <PageHeader title="Fila completa" description="Lista detalhada de pessoas aguardando." />
-      <p className="text-sm text-muted-foreground">Veja o painel para aceitar atendimentos. (Demo)</p>
+      <p className="text-sm text-muted-foreground">
+        Veja o painel para aceitar atendimentos. (Demo)
+      </p>
     </AppShell>
   ),
 });

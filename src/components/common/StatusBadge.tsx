@@ -16,15 +16,28 @@ const map: Record<string, string> = {
 };
 
 const labels: Record<string, string> = {
-  online: "Online", ocupado: "Ocupado", offline: "Offline",
-  pendente: "Pendente", em_analise: "Em análise", resolvido: "Resolvido", arquivado: "Arquivado",
-  aprovado: "Aprovado", recusado: "Recusado",
-  waiting: "Aguardando", active: "Em andamento", ended: "Encerrada",
+  online: "Online",
+  ocupado: "Ocupado",
+  offline: "Offline",
+  pendente: "Pendente",
+  em_analise: "Em análise",
+  resolvido: "Resolvido",
+  arquivado: "Arquivado",
+  aprovado: "Aprovado",
+  recusado: "Recusado",
+  waiting: "Aguardando",
+  active: "Em andamento",
+  ended: "Encerrada",
 };
 
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium", map[status] ?? "bg-muted text-foreground")}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+        map[status] ?? "bg-muted text-foreground",
+      )}
+    >
       <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
       {labels[status] ?? status}
     </span>

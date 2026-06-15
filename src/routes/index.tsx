@@ -1,8 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Heart, MessageCircleHeart, ShieldCheck, Sparkles, Phone, Lock, UsersRound, Clock } from "lucide-react";
+import {
+  ArrowRight,
+  Heart,
+  MessageCircleHeart,
+  ShieldCheck,
+  Sparkles,
+  Phone,
+  Lock,
+  UsersRound,
+  Clock,
+  BadgeCheck,
+} from "lucide-react";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export const Route = createFileRoute("/")({ component: Landing });
 
@@ -21,11 +37,12 @@ function Landing() {
               <Sparkles className="h-3.5 w-3.5" /> Acolhimento humano, anônimo e seguro
             </span>
             <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl md:text-6xl">
-              Você não está <span className="text-primary">sozinho</span>. Tem alguém pronto para te escutar.
+              Você não está <span className="text-primary">sozinho</span>. Tem alguém pronto para te
+              escutar.
             </h1>
             <p className="mt-5 max-w-xl text-base text-muted-foreground text-pretty sm:text-lg">
-              VIDA+ conecta você a voluntários treinados para uma conversa anônima de escuta emocional —
-              sem julgamento, sem diagnóstico, no seu tempo.
+              VIDA+ conecta você a voluntários treinados para uma conversa anônima de escuta
+              emocional — sem julgamento, sem diagnóstico, no seu tempo.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link to="/cadastro">
@@ -33,7 +50,7 @@ function Landing() {
                   Quero conversar <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
-              <Link to="/app/candidatura">
+              <Link to="/cadastro">
                 <Button size="lg" variant="outline" className="h-12 gap-2 px-6 text-base">
                   <Heart className="h-4 w-4" /> Quero ser voluntário
                 </Button>
@@ -42,9 +59,20 @@ function Landing() {
             <p className="mt-5 text-xs text-muted-foreground">
               VIDA+ oferece <strong>acolhimento</strong>, não diagnóstico ou tratamento médico.
             </p>
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <BadgeCheck className="h-4 w-4 text-primary" /> Gratuito
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Lock className="h-4 w-4 text-primary" /> Privacidade por padrão
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-primary" /> Acolhimento no seu ritmo
+              </span>
+            </div>
           </div>
           <div className="relative min-w-0">
-            <div className="rounded-3xl border bg-card p-6 shadow-soft">
+            <div className="hero-card rounded-3xl border bg-card/95 p-6 shadow-soft">
               <div className="flex items-center gap-3 border-b pb-4">
                 <div className="grid h-10 w-10 place-items-center rounded-full bg-primary/15 text-primary">
                   <MessageCircleHeart className="h-5 w-5" />
@@ -61,7 +89,9 @@ function Landing() {
               </div>
               <div className="mt-5 flex items-center gap-2 rounded-xl border bg-background px-3 py-2 text-sm text-muted-foreground">
                 <span className="flex-1">Escreva como está se sentindo…</span>
-                <span className="rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">Enviar</span>
+                <span className="rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
+                  Enviar
+                </span>
               </div>
             </div>
           </div>
@@ -72,15 +102,31 @@ function Landing() {
       <section className="border-t bg-card/30">
         <div className="mx-auto max-w-6xl px-4 py-16">
           <h2 className="font-display text-3xl font-semibold tracking-tight">Como funciona</h2>
-          <p className="mt-2 max-w-2xl text-muted-foreground">Três passos simples para uma conversa acolhedora.</p>
+          <p className="mt-2 max-w-2xl text-muted-foreground">
+            Três passos simples para uma conversa acolhedora.
+          </p>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
-              { n: "1", t: "Cadastre-se", d: "Crie uma conta anônima em segundos. Nenhum dado sensível é exigido." },
-              { n: "2", t: "Entre na fila", d: "Um voluntário disponível assume sua conversa com discrição." },
-              { n: "3", t: "Converse à vontade", d: "Escuta atenta, livre de julgamento, no seu próprio ritmo." },
+              {
+                n: "1",
+                t: "Cadastre-se",
+                d: "Crie uma conta anônima em segundos. Nenhum dado sensível é exigido.",
+              },
+              {
+                n: "2",
+                t: "Entre na fila",
+                d: "Um voluntário disponível assume sua conversa com discrição.",
+              },
+              {
+                n: "3",
+                t: "Converse à vontade",
+                d: "Escuta atenta, livre de julgamento, no seu próprio ritmo.",
+              },
             ].map((s) => (
               <div key={s.n} className="rounded-2xl border bg-background p-6 shadow-soft">
-                <div className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground font-display text-base font-semibold">{s.n}</div>
+                <div className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground font-display text-base font-semibold">
+                  {s.n}
+                </div>
                 <h3 className="mt-4 text-lg font-semibold">{s.t}</h3>
                 <p className="mt-1 text-sm text-muted-foreground text-pretty">{s.d}</p>
               </div>
@@ -92,22 +138,48 @@ function Landing() {
       {/* PRIVACIDADE */}
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="grid gap-6 md:grid-cols-3">
-          <Feature icon={Lock} title="Anônimo por padrão" text="Você não precisa expor sua identidade. Conversas são confidenciais." />
-          <Feature icon={ShieldCheck} title="Voluntários treinados" text="Selecionados e orientados para escuta ativa e respeito." />
-          <Feature icon={UsersRound} title="Acolhimento humano" text="Pessoas reais, sem respostas automáticas ou roteiros prontos." />
+          <Feature
+            icon={Lock}
+            title="Anônimo por padrão"
+            text="Você não precisa expor sua identidade. Conversas são confidenciais."
+          />
+          <Feature
+            icon={ShieldCheck}
+            title="Voluntários treinados"
+            text="Selecionados e orientados para escuta ativa e respeito."
+          />
+          <Feature
+            icon={UsersRound}
+            title="Acolhimento humano"
+            text="Pessoas reais, sem respostas automáticas ou roteiros prontos."
+          />
         </div>
       </section>
 
       {/* FAQ */}
       <section className="border-t">
         <div className="mx-auto max-w-3xl px-4 py-16">
-          <h2 className="font-display text-3xl font-semibold tracking-tight">Perguntas frequentes</h2>
+          <h2 className="font-display text-3xl font-semibold tracking-tight">
+            Perguntas frequentes
+          </h2>
           <Accordion type="single" collapsible className="mt-6 rounded-2xl border bg-card divide-y">
             {[
-              { q: "VIDA+ substitui um profissional?", a: "Não. Oferecemos acolhimento e escuta. Para diagnóstico ou tratamento, procure um profissional de saúde." },
-              { q: "Meus dados ficam guardados?", a: "Apenas o mínimo necessário. Conversas e mensagens privadas não são salvas em cache do dispositivo." },
-              { q: "Quanto custa?", a: "É gratuito. VIDA+ é mantido por voluntários e apoiadores." },
-              { q: "Posso ser voluntário?", a: "Sim! Sua candidatura passa por uma análise da equipe." },
+              {
+                q: "VIDA+ substitui um profissional?",
+                a: "Não. Oferecemos acolhimento e escuta. Para diagnóstico ou tratamento, procure um profissional de saúde.",
+              },
+              {
+                q: "Meus dados ficam guardados?",
+                a: "Apenas o mínimo necessário. Conversas e mensagens privadas não são salvas em cache do dispositivo.",
+              },
+              {
+                q: "Quanto custa?",
+                a: "É gratuito. VIDA+ é mantido por voluntários e apoiadores.",
+              },
+              {
+                q: "Posso ser voluntário?",
+                a: "Sim! Sua candidatura passa por uma análise da equipe.",
+              },
             ].map((f, i) => (
               <AccordionItem key={i} value={String(i)} className="border-0 px-4">
                 <AccordionTrigger className="text-left text-base">{f.q}</AccordionTrigger>
@@ -125,11 +197,15 @@ function Landing() {
             <Phone className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden="true" />
             <div>
               <p className="text-sm font-semibold">Em situação de crise ou risco?</p>
-              <p className="text-sm text-muted-foreground">Procure imediatamente: CVV 188 (24h) · SAMU 192 · Emergência 190.</p>
+              <p className="text-sm text-muted-foreground">
+                Procure imediatamente: CVV 188 (24h) · SAMU 192 · Emergência 190.
+              </p>
             </div>
           </div>
           <Link to="/seguranca">
-            <Button variant="outline" size="sm">Recursos de segurança</Button>
+            <Button variant="outline" size="sm">
+              Recursos de segurança
+            </Button>
           </Link>
         </div>
       </section>
@@ -140,7 +216,9 @@ function Landing() {
 function Bubble({ who, children }: { who: "me" | "vol"; children: React.ReactNode }) {
   return (
     <div className={who === "me" ? "flex justify-end" : "flex justify-start"}>
-      <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${who === "me" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+      <div
+        className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${who === "me" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+      >
         {children}
       </div>
     </div>
@@ -150,7 +228,9 @@ function Bubble({ who, children }: { who: "me" | "vol"; children: React.ReactNod
 function Feature({ icon: Icon, title, text }: { icon: typeof Heart; title: string; text: string }) {
   return (
     <div className="rounded-2xl border bg-card p-6 shadow-soft">
-      <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary"><Icon className="h-5 w-5" /></div>
+      <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">
+        <Icon className="h-5 w-5" />
+      </div>
       <h3 className="mt-4 text-lg font-semibold">{title}</h3>
       <p className="mt-1 text-sm text-muted-foreground text-pretty">{text}</p>
     </div>

@@ -19,7 +19,13 @@ export const Route = createFileRoute("/cadastro")({
 function Page() {
   const navigate = useNavigate();
   const { setAuthenticated } = useProfile();
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<SignupInput>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
     defaultValues: { name: "", email: "", password: "", accept: false as unknown as true },
   });
@@ -27,7 +33,11 @@ function Page() {
 
   const m = useMutation({
     mutationFn: (v: SignupInput) => authService.signup(v),
-    onSuccess: () => { setAuthenticated(true); toast.success("Conta criada com sucesso!"); navigate({ to: "/app" }); },
+    onSuccess: () => {
+      setAuthenticated(true);
+      toast.success("Conta criada com sucesso!");
+      navigate({ to: "/app" });
+    },
     onError: () => toast.error("Não foi possível criar sua conta."),
   });
 
@@ -41,19 +51,55 @@ function Page() {
           <Input id="name" autoComplete="nickname" {...register("name")} />
         </Field>
         <Field label="E-mail" id="email" error={errors.email?.message}>
-          <Input id="email" type="email" autoComplete="email" inputMode="email" {...register("email")} />
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            {...register("email")}
+          />
         </Field>
         <Field label="Senha" id="password" error={errors.password?.message}>
-          <Input id="password" type="password" autoComplete="new-password" {...register("password")} />
+          <Input
+            id="password"
+            type="password"
+            autoComplete="new-password"
+            {...register("password")}
+          />
         </Field>
         <label className="flex items-start gap-3 text-sm">
-          <Checkbox checked={accept} onCheckedChange={(v) => setValue("accept", !!v as unknown as true, { shouldValidate: true })} id="accept" />
-          <span>Li e aceito os <Link to="/termos" className="text-primary hover:underline">termos</Link> e a <Link to="/privacidade" className="text-primary hover:underline">política de privacidade</Link>.</span>
+          <Checkbox
+            checked={accept}
+            onCheckedChange={(v) =>
+              setValue("accept", !!v as unknown as true, { shouldValidate: true })
+            }
+            id="accept"
+          />
+          <span>
+            Li e aceito os{" "}
+            <Link to="/termos" className="text-primary hover:underline">
+              termos
+            </Link>{" "}
+            e a{" "}
+            <Link to="/privacidade" className="text-primary hover:underline">
+              política de privacidade
+            </Link>
+            .
+          </span>
         </label>
-        {errors.accept && <p role="alert" className="text-xs text-destructive">{errors.accept.message}</p>}
-        <Button type="submit" className="h-11 w-full" disabled={m.isPending}>{m.isPending ? "Criando…" : "Criar conta"}</Button>
+        {errors.accept && (
+          <p role="alert" className="text-xs text-destructive">
+            {errors.accept.message}
+          </p>
+        )}
+        <Button type="submit" className="h-11 w-full" disabled={m.isPending}>
+          {m.isPending ? "Criando…" : "Criar conta"}
+        </Button>
         <p className="text-center text-sm text-muted-foreground">
-          Já tem conta? <Link to="/login" className="text-primary hover:underline">Entrar</Link>
+          Já tem conta?{" "}
+          <Link to="/login" className="text-primary hover:underline">
+            Entrar
+          </Link>
         </p>
       </form>
     </AuthShell>

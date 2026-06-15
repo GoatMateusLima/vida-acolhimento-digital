@@ -99,3 +99,34 @@ export interface ApiError {
   code: string;
   message: string;
 }
+
+export interface Community {
+  id: string;
+  name: string;
+  description: string;
+  topic: string;
+  memberCount: number;
+  onlineCount: number;
+  joined: boolean;
+  myAlias?: string;
+  rules: string[];
+}
+
+export interface CommunityMessage {
+  id: string;
+  communityId: string;
+  alias: string;
+  text: string;
+  createdAt: string;
+  isMine?: boolean;
+  reported?: boolean;
+}
+
+export interface CommunityIdentity {
+  messageId: string;
+  alias: string;
+  realName: string;
+  email: string;
+  reason: string;
+  revealedAt: string;
+}

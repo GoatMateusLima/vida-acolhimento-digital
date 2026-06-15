@@ -23,7 +23,11 @@ function Page() {
 
   const join = useMutation({
     mutationFn: queueService.join,
-    onSuccess: (d) => { setPos(d.position); setEta(d.estimatedWait); setStep("waiting"); },
+    onSuccess: (d) => {
+      setPos(d.position);
+      setEta(d.estimatedWait);
+      setStep("waiting");
+    },
   });
 
   // Simula aparecimento de voluntário após 5s
@@ -31,12 +35,18 @@ function Page() {
     if (step !== "waiting") return;
     const t1 = setTimeout(() => setPos((p) => Math.max(1, p - 1)), 1500);
     const t2 = setTimeout(() => setStep("found"), 5000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [step]);
 
   return (
     <AppShell>
-      <PageHeader title="Conversar agora" description="Você está a alguns instantes de uma escuta acolhedora." />
+      <PageHeader
+        title="Conversar agora"
+        description="Você está a alguns instantes de uma escuta acolhedora."
+      />
 
       {step === "intro" && (
         <div className="grid gap-6 md:grid-cols-[1fr_auto]">
@@ -46,7 +56,12 @@ function Page() {
             <p className="mt-2 text-sm text-muted-foreground text-pretty">
               Sua conversa é anônima e confidencial. Você pode encerrá-la a qualquer momento.
             </p>
-            <Button onClick={() => join.mutate()} disabled={join.isPending} size="lg" className="mt-6 h-12 px-6">
+            <Button
+              onClick={() => join.mutate()}
+              disabled={join.isPending}
+              size="lg"
+              className="mt-6 h-12 px-6"
+            >
               {join.isPending ? "Entrando…" : "Entrar na fila"}
             </Button>
           </div>
@@ -59,11 +74,19 @@ function Page() {
             <Clock className="h-9 w-9 animate-pulse" aria-hidden="true" />
           </div>
           <h2 className="mt-5 font-display text-2xl font-semibold">Aguardando voluntário</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Sua posição na fila: <strong>{pos}</strong></p>
-          <p className="text-sm text-muted-foreground">Tempo estimado: <strong>{eta} min</strong></p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Sua posição na fila: <strong>{pos}</strong>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Tempo estimado: <strong>{eta} min</strong>
+          </p>
           <Button
-            variant="outline" className="mt-6 gap-2"
-            onClick={() => { setStep("intro"); toast("Você saiu da fila."); }}
+            variant="outline"
+            className="mt-6 gap-2"
+            onClick={() => {
+              setStep("intro");
+              toast("Você saiu da fila.");
+            }}
           >
             <X className="h-4 w-4" /> Cancelar espera
           </Button>
@@ -76,8 +99,14 @@ function Page() {
             <Heart className="h-9 w-9" aria-hidden="true" />
           </div>
           <h2 className="mt-5 font-display text-2xl font-semibold">Voluntário encontrado 💚</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Voluntário C. está pronto para te escutar.</p>
-          <Button onClick={() => navigate({ to: "/app/chat/$id", params: { id: "c1" } })} size="lg" className="mt-6 h-12 px-6">
+          <p className="mt-1 text-sm text-muted-foreground">
+            Voluntário C. está pronto para te escutar.
+          </p>
+          <Button
+            onClick={() => navigate({ to: "/app/chat/$id", params: { id: "c1" } })}
+            size="lg"
+            className="mt-6 h-12 px-6"
+          >
             Entrar na conversa
           </Button>
         </div>

@@ -6,12 +6,19 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { PriorityBadge } from "@/components/common/PriorityBadge";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { queueService, volunteerService } from "@/services";
 import { fmtRelative } from "@/utils/format";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { VolunteerStatus } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/vol/")({
   head: () => ({ meta: [{ title: "Painel do voluntário — VIDA+" }] }),
@@ -25,7 +32,10 @@ function Page() {
 
   const setStatusM = useMutation({
     mutationFn: (s: VolunteerStatus) => volunteerService.setStatus("me", s),
-    onSuccess: (d) => { setStatus(d.status); toast.success(`Status atualizado: ${d.status}`); },
+    onSuccess: (d) => {
+      setStatus(d.status);
+      toast.success(`Status atualizado: ${d.status}`);
+    },
   });
   const accept = useMutation({
     mutationFn: (id: string) => volunteerService.accept(id),
@@ -62,22 +72,46 @@ function Page() {
           <Users className="h-5 w-5" /> Fila de espera
         </h2>
         <div className="divide-y rounded-2xl border bg-card">
+          {q.isPending && (
+            <div className="space-y-3 p-4">
+              {[1, 2, 3].map((item) => (
+                <Skeleton key={item} className="h-14 w-full rounded-xl" />
+              ))}
+            </div>
+          )}
           {(q.data ?? []).map((e) => (
-            <div key={e.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4">
+            <div
+              key={e.id}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4"
+            >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="truncate text-sm font-medium">{e.alias}</p>
                   <PriorityBadge priority={e.priority} />
                 </div>
-                <p className="mt-0.5 text-xs text-muted-foreground">{e.topic} · aguardando {fmtRelative(e.waitingSince)}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {e.topic} · aguardando {fmtRelative(e.waitingSince)}
+                </p>
               </div>
-              <Button size="sm" onClick={() => accept.mutate(e.id)} disabled={accept.isPending} className="gap-1.5">
+              <Button
+                size="sm"
+                onClick={() => accept.mutate(e.id)}
+                disabled={accept.isPending || status !== "online"}
+                className="gap-1.5"
+              >
                 <CheckCircle2 className="h-4 w-4" /> Aceitar
               </Button>
             </div>
           ))}
           {!q.isPending && (q.data?.length ?? 0) === 0 && (
-            <p className="p-6 text-center text-sm text-muted-foreground">Nenhuma pessoa aguardando agora.</p>
+            <p className="p-6 text-center text-sm text-muted-foreground">
+              Nenhuma pessoa aguardando agora.
+            </p>
+          )}
+          {status !== "online" && !q.isPending && (
+            <p className="border-t p-4 text-center text-xs text-muted-foreground">
+              Fique online para aceitar um novo atendimento.
+            </p>
           )}
         </div>
       </section>
@@ -87,7 +121,9 @@ function Page() {
         <div className="flex items-center gap-3 rounded-2xl border bg-card p-4">
           <StatusBadge status="aprovado" />
           <p className="text-sm text-muted-foreground">Você está apto a atender.</p>
-          <Link to="/vol/candidatura" className="ml-auto text-sm text-primary hover:underline">Ver detalhes</Link>
+          <Link to="/vol/candidatura" className="ml-auto text-sm text-primary hover:underline">
+            Ver detalhes
+          </Link>
         </div>
       </section>
     </AppShell>

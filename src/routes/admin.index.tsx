@@ -33,7 +33,11 @@ function Page() {
               <XAxis dataKey="day" stroke="var(--muted-foreground)" fontSize={12} />
               <YAxis stroke="var(--muted-foreground)" fontSize={12} />
               <Tooltip
-                contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12 }}
+                contentStyle={{
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 12,
+                }}
                 labelStyle={{ color: "var(--foreground)" }}
               />
               <Bar dataKey="conversations" radius={[8, 8, 0, 0]} fill="var(--primary)" />

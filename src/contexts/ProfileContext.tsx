@@ -36,7 +36,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = useMemo(() => ({ role, setRole, isAuthenticated, setAuthenticated: setAuth }), [role, isAuthenticated]);
+  const value = useMemo(
+    () => ({ role, setRole, isAuthenticated, setAuthenticated: setAuth }),
+    [role, isAuthenticated],
+  );
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
 }
 

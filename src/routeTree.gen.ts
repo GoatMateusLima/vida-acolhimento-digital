@@ -32,10 +32,12 @@ import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppHistoricoRouteImport } from './routes/app.historico'
 import { Route as AppDenunciaRouteImport } from './routes/app.denuncia'
 import { Route as AppConversarRouteImport } from './routes/app.conversar'
+import { Route as AppComunidadesRouteImport } from './routes/app.comunidades'
 import { Route as AppCandidaturaRouteImport } from './routes/app.candidatura'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
 import { Route as AdminCandidaturasRouteImport } from './routes/admin.candidaturas'
 import { Route as VolChatIdRouteImport } from './routes/vol.chat.$id'
+import { Route as AppComunidadesIdRouteImport } from './routes/app.comunidades.$id'
 import { Route as AppChatIdRouteImport } from './routes/app.chat.$id'
 import { Route as AdminCandidaturasIdRouteImport } from './routes/admin.candidaturas.$id'
 
@@ -154,6 +156,11 @@ const AppConversarRoute = AppConversarRouteImport.update({
   path: '/app/conversar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppComunidadesRoute = AppComunidadesRouteImport.update({
+  id: '/app/comunidades',
+  path: '/app/comunidades',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppCandidaturaRoute = AppCandidaturaRouteImport.update({
   id: '/app/candidatura',
   path: '/app/candidatura',
@@ -173,6 +180,11 @@ const VolChatIdRoute = VolChatIdRouteImport.update({
   id: '/vol/chat/$id',
   path: '/vol/chat/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppComunidadesIdRoute = AppComunidadesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppComunidadesRoute,
 } as any)
 const AppChatIdRoute = AppChatIdRouteImport.update({
   id: '/app/chat/$id',
@@ -198,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/admin/candidaturas': typeof AdminCandidaturasRouteWithChildren
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/candidatura': typeof AppCandidaturaRoute
+  '/app/comunidades': typeof AppComunidadesRouteWithChildren
   '/app/conversar': typeof AppConversarRoute
   '/app/denuncia': typeof AppDenunciaRoute
   '/app/historico': typeof AppHistoricoRoute
@@ -214,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/vol/': typeof VolIndexRoute
   '/admin/candidaturas/$id': typeof AdminCandidaturasIdRoute
   '/app/chat/$id': typeof AppChatIdRoute
+  '/app/comunidades/$id': typeof AppComunidadesIdRoute
   '/vol/chat/$id': typeof VolChatIdRoute
 }
 export interface FileRoutesByTo {
@@ -229,6 +243,7 @@ export interface FileRoutesByTo {
   '/admin/candidaturas': typeof AdminCandidaturasRouteWithChildren
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/candidatura': typeof AppCandidaturaRoute
+  '/app/comunidades': typeof AppComunidadesRouteWithChildren
   '/app/conversar': typeof AppConversarRoute
   '/app/denuncia': typeof AppDenunciaRoute
   '/app/historico': typeof AppHistoricoRoute
@@ -245,6 +260,7 @@ export interface FileRoutesByTo {
   '/vol': typeof VolIndexRoute
   '/admin/candidaturas/$id': typeof AdminCandidaturasIdRoute
   '/app/chat/$id': typeof AppChatIdRoute
+  '/app/comunidades/$id': typeof AppComunidadesIdRoute
   '/vol/chat/$id': typeof VolChatIdRoute
 }
 export interface FileRoutesById {
@@ -261,6 +277,7 @@ export interface FileRoutesById {
   '/admin/candidaturas': typeof AdminCandidaturasRouteWithChildren
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/candidatura': typeof AppCandidaturaRoute
+  '/app/comunidades': typeof AppComunidadesRouteWithChildren
   '/app/conversar': typeof AppConversarRoute
   '/app/denuncia': typeof AppDenunciaRoute
   '/app/historico': typeof AppHistoricoRoute
@@ -277,6 +294,7 @@ export interface FileRoutesById {
   '/vol/': typeof VolIndexRoute
   '/admin/candidaturas/$id': typeof AdminCandidaturasIdRoute
   '/app/chat/$id': typeof AppChatIdRoute
+  '/app/comunidades/$id': typeof AppComunidadesIdRoute
   '/vol/chat/$id': typeof VolChatIdRoute
 }
 export interface FileRouteTypes {
@@ -294,6 +312,7 @@ export interface FileRouteTypes {
     | '/admin/candidaturas'
     | '/admin/usuarios'
     | '/app/candidatura'
+    | '/app/comunidades'
     | '/app/conversar'
     | '/app/denuncia'
     | '/app/historico'
@@ -310,6 +329,7 @@ export interface FileRouteTypes {
     | '/vol/'
     | '/admin/candidaturas/$id'
     | '/app/chat/$id'
+    | '/app/comunidades/$id'
     | '/vol/chat/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -325,6 +345,7 @@ export interface FileRouteTypes {
     | '/admin/candidaturas'
     | '/admin/usuarios'
     | '/app/candidatura'
+    | '/app/comunidades'
     | '/app/conversar'
     | '/app/denuncia'
     | '/app/historico'
@@ -341,6 +362,7 @@ export interface FileRouteTypes {
     | '/vol'
     | '/admin/candidaturas/$id'
     | '/app/chat/$id'
+    | '/app/comunidades/$id'
     | '/vol/chat/$id'
   id:
     | '__root__'
@@ -356,6 +378,7 @@ export interface FileRouteTypes {
     | '/admin/candidaturas'
     | '/admin/usuarios'
     | '/app/candidatura'
+    | '/app/comunidades'
     | '/app/conversar'
     | '/app/denuncia'
     | '/app/historico'
@@ -372,6 +395,7 @@ export interface FileRouteTypes {
     | '/vol/'
     | '/admin/candidaturas/$id'
     | '/app/chat/$id'
+    | '/app/comunidades/$id'
     | '/vol/chat/$id'
   fileRoutesById: FileRoutesById
 }
@@ -388,6 +412,7 @@ export interface RootRouteChildren {
   AdminCandidaturasRoute: typeof AdminCandidaturasRouteWithChildren
   AdminUsuariosRoute: typeof AdminUsuariosRoute
   AppCandidaturaRoute: typeof AppCandidaturaRoute
+  AppComunidadesRoute: typeof AppComunidadesRouteWithChildren
   AppConversarRoute: typeof AppConversarRoute
   AppDenunciaRoute: typeof AppDenunciaRoute
   AppHistoricoRoute: typeof AppHistoricoRoute
@@ -569,6 +594,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConversarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/comunidades': {
+      id: '/app/comunidades'
+      path: '/app/comunidades'
+      fullPath: '/app/comunidades'
+      preLoaderRoute: typeof AppComunidadesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/candidatura': {
       id: '/app/candidatura'
       path: '/app/candidatura'
@@ -596,6 +628,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/vol/chat/$id'
       preLoaderRoute: typeof VolChatIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/app/comunidades/$id': {
+      id: '/app/comunidades/$id'
+      path: '/$id'
+      fullPath: '/app/comunidades/$id'
+      preLoaderRoute: typeof AppComunidadesIdRouteImport
+      parentRoute: typeof AppComunidadesRoute
     }
     '/app/chat/$id': {
       id: '/app/chat/$id'
@@ -625,6 +664,18 @@ const AdminCandidaturasRouteChildren: AdminCandidaturasRouteChildren = {
 const AdminCandidaturasRouteWithChildren =
   AdminCandidaturasRoute._addFileChildren(AdminCandidaturasRouteChildren)
 
+interface AppComunidadesRouteChildren {
+  AppComunidadesIdRoute: typeof AppComunidadesIdRoute
+}
+
+const AppComunidadesRouteChildren: AppComunidadesRouteChildren = {
+  AppComunidadesIdRoute: AppComunidadesIdRoute,
+}
+
+const AppComunidadesRouteWithChildren = AppComunidadesRoute._addFileChildren(
+  AppComunidadesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastroRoute: CadastroRoute,
@@ -638,6 +689,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCandidaturasRoute: AdminCandidaturasRouteWithChildren,
   AdminUsuariosRoute: AdminUsuariosRoute,
   AppCandidaturaRoute: AppCandidaturaRoute,
+  AppComunidadesRoute: AppComunidadesRouteWithChildren,
   AppConversarRoute: AppConversarRoute,
   AppDenunciaRoute: AppDenunciaRoute,
   AppHistoricoRoute: AppHistoricoRoute,
@@ -658,3 +710,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

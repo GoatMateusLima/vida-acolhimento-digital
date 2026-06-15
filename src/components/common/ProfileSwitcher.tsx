@@ -1,6 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useProfile } from "@/contexts/ProfileContext";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { ProfileRole } from "@/types";
 
 const LABEL: Record<ProfileRole, string> = {
@@ -40,7 +46,9 @@ export function ProfileSwitcher() {
         </SelectTrigger>
         <SelectContent>
           {(Object.keys(LABEL) as ProfileRole[]).map((k) => (
-            <SelectItem key={k} value={k}>Perfil: {LABEL[k]}</SelectItem>
+            <SelectItem key={k} value={k}>
+              Perfil: {LABEL[k]}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>

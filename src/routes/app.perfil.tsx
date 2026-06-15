@@ -22,7 +22,11 @@ export const Route = createFileRoute("/app/perfil")({
 
 function Page() {
   const me = useQuery({ queryKey: ["me"], queryFn: userService.me });
-  const { register, handleSubmit, formState: { errors } } = useForm<V>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<V>({
     resolver: zodResolver(profileSchema),
     values: me.data ? { name: me.data.name, email: me.data.email } : undefined,
   });
@@ -30,7 +34,10 @@ function Page() {
   return (
     <AppShell>
       <PageHeader title="Perfil" description="Seus dados básicos." />
-      <form onSubmit={handleSubmit(() => toast.success("Perfil atualizado."))} className="max-w-md space-y-4">
+      <form
+        onSubmit={handleSubmit(() => toast.success("Perfil atualizado."))}
+        className="max-w-md space-y-4"
+      >
         <Field label="Nome" id="name" error={errors.name?.message}>
           <Input id="name" {...register("name")} />
         </Field>

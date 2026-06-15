@@ -19,18 +19,30 @@ function Page() {
 
   return (
     <AppShell>
-      <PageHeader title="Histórico" description="Suas conversas anteriores. O conteúdo das mensagens não é armazenado." />
+      <PageHeader
+        title="Histórico"
+        description="Suas conversas anteriores. O conteúdo das mensagens não é armazenado."
+      />
       {q.isPending ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : list.length === 0 ? (
-        <EmptyState icon={Inbox} title="Sem conversas ainda" description="Quando você conversar, ela aparecerá aqui." />
+        <EmptyState
+          icon={Inbox}
+          title="Sem conversas ainda"
+          description="Quando você conversar, ela aparecerá aqui."
+        />
       ) : (
         <ul className="divide-y rounded-2xl border bg-card">
           {list.map((c) => (
-            <li key={c.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4">
+            <li
+              key={c.id}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4"
+            >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{c.topic}</p>
-                <p className="text-xs text-muted-foreground">{fmtDateTime(c.startedAt)} · {c.volunteerAlias ?? "—"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {fmtDateTime(c.startedAt)} · {c.volunteerAlias ?? "—"}
+                </p>
               </div>
               <StatusBadge status={c.status} />
             </li>

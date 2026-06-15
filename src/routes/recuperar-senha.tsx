@@ -18,8 +18,13 @@ export const Route = createFileRoute("/recuperar-senha")({
 });
 
 function Page() {
-  const { register, handleSubmit, formState: { errors, isSubmitSuccessful } } = useForm<Input>({
-    resolver: zodResolver(recoverSchema), defaultValues: { email: "" },
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitSuccessful },
+  } = useForm<Input>({
+    resolver: zodResolver(recoverSchema),
+    defaultValues: { email: "" },
   });
   const m = useMutation({
     mutationFn: (v: Input) => authService.recover(v.email),
@@ -32,12 +37,26 @@ function Page() {
       <p className="mt-2 text-sm text-muted-foreground">Enviaremos um link para o seu e-mail.</p>
       <form onSubmit={handleSubmit((v) => m.mutate(v))} className="mt-8 space-y-4" noValidate>
         <Field label="E-mail" id="email" error={errors.email?.message}>
-          <Input id="email" type="email" inputMode="email" autoComplete="email" {...register("email")} />
+          <Input
+            id="email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            {...register("email")}
+          />
         </Field>
-        <Button type="submit" className="h-11 w-full" disabled={m.isPending}>{m.isPending ? "Enviando…" : "Enviar link"}</Button>
-        {isSubmitSuccessful && <p className="text-center text-xs text-muted-foreground">Se a conta existir, você receberá instruções.</p>}
+        <Button type="submit" className="h-11 w-full" disabled={m.isPending}>
+          {m.isPending ? "Enviando…" : "Enviar link"}
+        </Button>
+        {isSubmitSuccessful && (
+          <p className="text-center text-xs text-muted-foreground">
+            Se a conta existir, você receberá instruções.
+          </p>
+        )}
         <p className="text-center text-sm text-muted-foreground">
-          <Link to="/login" className="text-primary hover:underline">Voltar para entrar</Link>
+          <Link to="/login" className="text-primary hover:underline">
+            Voltar para entrar
+          </Link>
         </p>
       </form>
     </AuthShell>

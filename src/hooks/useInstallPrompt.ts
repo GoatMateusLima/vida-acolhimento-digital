@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
-type BIPEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
+type BIPEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
 
 export function useInstallPrompt() {
   const [event, setEvent] = useState<BIPEvent | null>(null);

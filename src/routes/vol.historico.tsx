@@ -8,23 +8,30 @@ import { fmtDateTime } from "@/utils/format";
 
 export const Route = createFileRoute("/vol/historico")({
   head: () => ({ meta: [{ title: "Histórico de atendimentos — VIDA+" }] }),
-  component: () => {
-    const q = useQuery({ queryKey: ["conversations"], queryFn: chatService.getConversations });
-    return (
-      <AppShell>
-        <PageHeader title="Histórico de atendimentos" />
-        <ul className="divide-y rounded-2xl border bg-card">
-          {(q.data ?? []).map((c) => (
-            <li key={c.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{c.topic} · {c.userAlias}</p>
-                <p className="text-xs text-muted-foreground">{fmtDateTime(c.startedAt)}</p>
-              </div>
-              <StatusBadge status={c.status} />
-            </li>
-          ))}
-        </ul>
-      </AppShell>
-    );
-  },
+  component: Page,
 });
+
+function Page() {
+  const q = useQuery({ queryKey: ["conversations"], queryFn: chatService.getConversations });
+  return (
+    <AppShell>
+      <PageHeader title="Histórico de atendimentos" />
+      <ul className="divide-y overflow-hidden rounded-2xl border bg-card shadow-soft">
+        {(q.data ?? []).map((c) => (
+          <li
+            key={c.id}
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 transition hover:bg-muted/35"
+          >
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">
+                {c.topic} · {c.userAlias}
+              </p>
+              <p className="text-xs text-muted-foreground">{fmtDateTime(c.startedAt)}</p>
+            </div>
+            <StatusBadge status={c.status} />
+          </li>
+        ))}
+      </ul>
+    </AppShell>
+  );
+}
