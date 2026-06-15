@@ -16,6 +16,9 @@ dist-ssr
 .nitro
 *.local
 
+# Netlify generated (SSR/edge-function artifacts — not used in this SPA)
+.netlify/edge-functions/server/
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
