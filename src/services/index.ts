@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { mockAdminCommunityMembers, mockReports, mockUsers, mockVolunteers } from "@/mocks/db";
-import { cloneDeep, delay } from "@/mocks/handlers";
 import { http, setAccessToken } from "@/services/api/client";
 import type {
   Application,
@@ -52,6 +50,11 @@ function mapRole(role?: BackendRole): User["role"] {
   return "usuario";
 }
 
+function toBackendRole(role: User["role"]): Exclude<BackendRole, "anonimo"> {
+  if (role === "usuario") return "cadastrado";
+  return role;
+}
+
 function initialsFrom(name: string) {
   return name
     .split(" ")
@@ -77,6 +80,19 @@ function mapUser(input: any, emailFallback = ""): User {
     email: input?.email ?? emailFallback,
     role: mapRole(input?.role ?? input?.app_metadata?.role),
     joinedAt: input?.created_at ?? input?.created_at ?? new Date().toISOString(),
+  };
+}
+
+function mapVolunteer(input: any): Volunteer {
+  const name = input.users?.display_name ?? input.display_name ?? "Voluntario";
+  return {
+    id: input.user_id ?? input.id,
+    alias: name,
+    initials: initialsFrom(name),
+    status: input.availability_status ?? "offline",
+    rating: 0,
+    totalSessions: input.total_chats ?? 0,
+    applicationStatus: "aprovado",
   };
 }
 
@@ -262,11 +278,15 @@ export const userService = {
     return user;
   },
   async list(): Promise<User[]> {
-    return delay(cloneDeep(mockUsers));
+    const data = await apiData<any[]>("/users/admin");
+    return data.map(mapUser);
   },
   async updateRole(id: string, role: User["role"]): Promise<User> {
-    const user = { ...mockUsers.find((item) => item.id === id)!, role };
-    return delay(user);
+    const data = await apiData<any>(`/users/admin/${id}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role: toBackendRole(role) }),
+    });
+    return mapUser(data);
   },
 };
 
@@ -321,7 +341,8 @@ export const chatService = {
 // VOLUNTEER -------------------------------------------------------------
 export const volunteerService = {
   async list(): Promise<Volunteer[]> {
-    return delay(cloneDeep(mockVolunteers));
+    const data = await apiData<any[]>("/admin/volunteers");
+    return data.map(mapVolunteer);
   },
   async setStatus(_id: string, status: VolunteerStatus): Promise<{ status: VolunteerStatus }> {
     await apiData<unknown>("/admin/volunteers/availability", {
@@ -343,10 +364,8 @@ export const applicationService = {
     return data.map(mapApplication);
   },
   async get(id: string): Promise<Application> {
-    const applications = await applicationService.list();
-    const application = applications.find((item) => item.id === id);
-    if (!application) throw new Error("Candidatura nao encontrada");
-    return application;
+    const data = await apiData<any>(`/admin/volunteers/applications/${id}`);
+    return mapApplication(data);
   },
   async submit(data: Omit<Application, "id" | "status" | "submittedAt">): Promise<Application> {
     const response = await apiData<any>("/admin/volunteers/apply", {
@@ -364,7 +383,11 @@ export const applicationService = {
   ): Promise<{ id: string; status: ApplicationStatus }> {
     const backendStatus = toBackendApplicationStatus(status);
     if (backendStatus !== "aprovada") {
-      throw new Error("O backend atual so expoe aprovacao de candidatura.");
+      await apiData<unknown>(`/admin/volunteers/${id}/reject`, {
+        method: "POST",
+        body: JSON.stringify({ decision: "Candidatura rejeitada pela administracao." }),
+      });
+      return { id, status };
     }
     await apiData<unknown>(`/admin/volunteers/${id}/approve`, { method: "POST" });
     return { id, status };
@@ -378,35 +401,31 @@ export const reportService = {
     return data.map(mapReport);
   },
   async get(id: string): Promise<Report> {
-    const reports = await reportService.list().catch(() => cloneDeep(mockReports));
-    const report = reports.find((item) => item.id === id);
-    if (!report) throw new Error("Denuncia nao encontrada");
-    return report;
+    const data = await apiData<any>(`/reports/admin/reports/${id}`);
+    return mapReport(data);
   },
   async create(data: { reportedAlias: string; reason: string; details: string }): Promise<Report> {
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
         data.reportedAlias,
       );
-    if (!isUuid) {
-      return delay({
-        id: `r-${Date.now()}`,
-        reporterAlias: "Voce",
-        ...data,
-        status: "pendente",
-        priority: "media",
-        createdAt: new Date().toISOString(),
-        history: [{ at: new Date().toISOString(), action: "Denuncia registrada", by: "Sistema" }],
-      });
-    }
     const response = await apiData<any>("/reports", {
       method: "POST",
-      body: JSON.stringify({
-        targetType: "usuario",
-        targetId: data.reportedAlias,
-        reason: data.reason,
-        description: data.details,
-      }),
+      body: JSON.stringify(
+        isUuid
+          ? {
+              targetType: "usuario",
+              targetId: data.reportedAlias,
+              reason: data.reason,
+              description: data.details,
+            }
+          : {
+              targetType: "usuario",
+              reportedAlias: data.reportedAlias,
+              reason: data.reason,
+              description: data.details,
+            },
+      ),
     });
     return mapReport(response);
   },
@@ -476,7 +495,7 @@ export const adminCommunityService = {
     const community = mapAdminCommunity(data);
     return {
       ...community,
-      members: (data.members ?? mockAdminCommunityMembers[id] ?? []).map((member: any) => ({
+      members: (data.members ?? []).map((member: any) => ({
         userId: member.user_id ?? member.userId,
         name: member.display_name ?? member.name ?? "Participante",
         email: member.email ?? "",
