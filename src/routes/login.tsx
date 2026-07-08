@@ -30,7 +30,8 @@ function Page() {
 
   const m = useMutation({
     mutationFn: ({ email, password }: LoginInput) => authService.login(email, password),
-    onSuccess: () => {
+    onSuccess: (user) => {
+      setRole(user.role);
       setAuthenticated(true);
       toast.success("Bem-vindo(a) de volta!");
       navigate({ to: "/app" });

@@ -18,7 +18,7 @@ export const Route = createFileRoute("/cadastro")({
 
 function Page() {
   const navigate = useNavigate();
-  const { setAuthenticated } = useProfile();
+  const { setAuthenticated, setRole } = useProfile();
   const {
     register,
     handleSubmit,
@@ -33,7 +33,8 @@ function Page() {
 
   const m = useMutation({
     mutationFn: (v: SignupInput) => authService.signup(v),
-    onSuccess: () => {
+    onSuccess: (user) => {
+      setRole(user.role);
       setAuthenticated(true);
       toast.success("Conta criada com sucesso!");
       navigate({ to: "/app" });

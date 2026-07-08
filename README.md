@@ -1,72 +1,68 @@
-# VIDA+ — Frontend
+# VIDA+ - Frontend
 
-Plataforma de acolhimento e escuta emocional. **Somente frontend**, com dados mockados.
+Frontend do projeto VIDA+, conectado ao backend em:
 
-## Stack
+```text
+C:\Users\todeb\Desktop\PROJETOS\VIDA+
+```
 
-- React 19 + TypeScript + Vite
-- TanStack Router (file-based) + TanStack Query
-- Tailwind CSS v4 + shadcn/ui
-- React Hook Form + Zod
-- Lucide Icons
-- PWA (manifest + ícones + indicador offline + botão instalar)
+Este app usa React, TypeScript, Vite, TanStack Router, TanStack Query,
+Tailwind CSS e shadcn/ui.
+
+## Funcionamento
+
+Leia:
+
+- `docs/COMO_FUNCIONA.md`
+- `docs/GUIA_INTEGRACAO_BACKEND.md`
+
+## URLs
+
+Configure em `.env.local`:
+
+```env
+VITE_API_BASE_URL=http://localhost:3000/api
+VITE_APP_URL=http://localhost:5173
+```
+
+Para testar frontend local com backend online:
+
+```env
+VITE_API_BASE_URL=https://vida-43t9.onrender.com/api
+VITE_APP_URL=http://localhost:5173
+```
+
+No Netlify:
+
+```env
+VITE_API_BASE_URL=https://vida-43t9.onrender.com/api
+VITE_APP_URL=https://vidafrontend.netlify.app
+```
 
 ## Scripts
 
 ```bash
-bun install
-bun run dev        # desenvolvimento
-bun run build      # build de produção
-bun run preview    # pré-visualização do build
+npm install
+npm run dev
+npm run build
+npm run lint
 ```
 
 ## Estrutura
 
-```
+```text
 src/
-  routes/          # páginas (file-based TanStack Router)
-  components/      # UI + comuns + PWA
-  layouts/         # PublicLayout, AppShell
-  contexts/        # Theme, Profile
-  hooks/           # useOnline, useInstallPrompt
-  services/        # camada de API (hoje consome mocks)
-  mocks/           # dados simulados + handlers (latência/erros)
-  types/           # tipos compartilhados
-  utils/           # validators (zod), format (intl)
+  routes/          paginas
+  components/      componentes de UI
+  layouts/         layouts
+  contexts/        estado de perfil/demo
+  services/        services usados pelas telas
+  services/api/    cliente HTTP configuravel
+  mocks/           dados simulados
+  types/           tipos TypeScript
 ```
-
-## Perfis (demo)
-
-Use o seletor "Demo" no topo do app para alternar entre:
-
-- `usuário` → `/app`
-- `voluntário` → `/vol`
-- `moderador` → `/mod`
-- `administrador` → `/admin`
-
-A escolha persiste em `localStorage`.
-
-## Mocks → API real
-
-Todos os mocks vivem em `src/mocks/`. Os componentes consomem **services** em `src/services/index.ts`, não os mocks diretamente. Para conectar à API real:
-
-1. Implemente `src/services/api/client.ts` (fetch wrapper).
-2. Substitua o corpo de cada função em `src/services/index.ts` por chamadas HTTP.
-3. Os tipos em `src/types/` já refletem o contrato esperado da API.
-
-## PWA
-
-O manifest (`public/manifest.webmanifest`) e ícones estão configurados. O app é instalável quando o navegador detectar suporte (botão "Instalar aplicativo" aparece automaticamente). Indicador "sem conexão" e página `/offline.html` estão prontos.
-
-> Service Worker para cache offline completo deve ser habilitado **somente em produção** via `vite-plugin-pwa`, evitando interferência com o preview de desenvolvimento. Nunca cacheie mensagens de chat ou dados privados.
-
-## Acessibilidade
-
-- Contraste WCAG AA (tokens em oklch).
-- Foco visível, navegação por teclado, áreas de toque ≥44px.
-- `prefers-reduced-motion` respeitado.
-- `lang="pt-BR"`, único `<main>` por página, labels e mensagens de erro com `role="alert"`.
 
 ## Aviso
 
-O VIDA+ oferece **acolhimento e escuta**, não diagnóstico ou tratamento médico. Em emergência: **CVV 188** · **SAMU 192**.
+O VIDA+ oferece acolhimento e escuta emocional, nao diagnostico ou tratamento
+medico. Em emergencia: CVV 188 ou SAMU 192.

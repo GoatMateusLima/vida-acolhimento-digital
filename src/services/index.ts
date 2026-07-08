@@ -1,18 +1,7 @@
-import {
-  mockApplications,
-  mockAdminCommunities,
-  mockAdminCommunityMembers,
-  mockCommunities,
-  mockCommunityMessages,
-  mockConversations,
-  mockMessages,
-  mockMetrics,
-  mockQueue,
-  mockReports,
-  mockUsers,
-  mockVolunteers,
-} from "@/mocks/db";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { mockAdminCommunityMembers, mockReports, mockUsers, mockVolunteers } from "@/mocks/db";
 import { cloneDeep, delay } from "@/mocks/handlers";
+import { http, setAccessToken } from "@/services/api/client";
 import type {
   Application,
   AdminCommunity,
@@ -33,299 +22,526 @@ import type {
   VolunteerStatus,
 } from "@/types";
 
-// AUTH (mock) ------------------------------------------------------------
+type ApiEnvelope<T> = {
+  status: string;
+  message?: string;
+  data: T;
+};
+
+type BackendRole = "anonimo" | "cadastrado" | "voluntario" | "moderador" | "administrador";
+
+const CURRENT_USER_KEY = "vidaplus:user_id";
+
+async function apiData<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await http<ApiEnvelope<T>>(path, init);
+  return response.data;
+}
+
+function saveCurrentUserId(id?: string) {
+  if (typeof window === "undefined" || !id) return;
+  window.localStorage.setItem(CURRENT_USER_KEY, id);
+}
+
+function getCurrentUserId() {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(CURRENT_USER_KEY);
+}
+
+function mapRole(role?: BackendRole): User["role"] {
+  if (role === "voluntario" || role === "moderador" || role === "administrador") return role;
+  return "usuario";
+}
+
+function initialsFrom(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+function mapUser(input: any, emailFallback = ""): User {
+  const name =
+    input?.display_name ??
+    input?.user_metadata?.display_name ??
+    input?.profile?.nickname ??
+    input?.email ??
+    "Pessoa VIDA+";
+  const id = input?.id ?? input?.user_id ?? "me";
+  return {
+    id,
+    name,
+    initials: initialsFrom(name),
+    email: input?.email ?? emailFallback,
+    role: mapRole(input?.role ?? input?.app_metadata?.role),
+    joinedAt: input?.created_at ?? input?.created_at ?? new Date().toISOString(),
+  };
+}
+
+function mapConversationStatus(status?: string): Conversation["status"] {
+  if (status === "ativa" || status === "sinalizada") return "active";
+  if (status === "encerrada" || status === "arquivada") return "ended";
+  return "waiting";
+}
+
+function mapConversation(input: any): Conversation {
+  return {
+    id: input.id,
+    userAlias: input.anonymous_name ?? "Pessoa acolhida",
+    volunteerAlias: input.volunteer_id ? "Voluntario" : undefined,
+    status: mapConversationStatus(input.status),
+    startedAt: input.started_at ?? input.created_at ?? new Date().toISOString(),
+    endedAt: input.ended_at,
+    topic: input.closed_reason ?? "Atendimento emocional",
+    priority: input.priority ?? "normal",
+    lastMessage: input.last_message,
+  };
+}
+
+function mapMessage(input: any): ChatMessage {
+  const mine = input.sender_id && input.sender_id === getCurrentUserId();
+  return {
+    id: input.id,
+    conversationId: input.conversation_id,
+    author: input.type === "system" ? "system" : mine ? "user" : "volunteer",
+    text: input.body ?? input.text ?? "",
+    createdAt: input.created_at ?? new Date().toISOString(),
+    status: "sent",
+  };
+}
+
+function mapQueueEntry(input: any): QueueEntry {
+  const waitingSince = input.created_at ?? new Date().toISOString();
+  const waitedMinutes = Math.max(
+    1,
+    Math.round((Date.now() - new Date(waitingSince).getTime()) / 60000),
+  );
+  return {
+    id: input.id,
+    alias: input.anonymous_name ?? "Pessoa aguardando",
+    topic: "Acolhimento emocional",
+    priority: input.priority ?? "normal",
+    waitingSince,
+    estimatedWait: Math.max(1, 5 - waitedMinutes),
+  };
+}
+
+function mapApplicationStatus(status?: string): ApplicationStatus {
+  if (status === "aprovada") return "aprovado";
+  if (status === "rejeitada") return "recusado";
+  if (status === "em_analise") return "em_analise";
+  return "pendente";
+}
+
+function toBackendApplicationStatus(status: ApplicationStatus) {
+  if (status === "aprovado") return "aprovada";
+  if (status === "recusado") return "rejeitada";
+  return status;
+}
+
+function mapApplication(input: any): Application {
+  const name = input.users?.display_name ?? input.candidateAlias ?? "Candidato";
+  return {
+    id: input.id,
+    candidateAlias: name,
+    submittedAt: input.created_at ?? input.submittedAt ?? new Date().toISOString(),
+    motivation: input.motivation ?? "",
+    availability: input.availability ?? "A combinar",
+    experience: input.experience ?? "",
+    status: mapApplicationStatus(input.status),
+  };
+}
+
+function mapReport(input: any): Report {
+  return {
+    id: input.id,
+    reporterAlias: input.reporterAlias ?? "Pessoa denunciante",
+    reportedAlias: input.target_id ?? input.reportedAlias ?? "Alvo informado",
+    reason: input.reason ?? "",
+    details: input.description ?? input.details ?? "",
+    status: input.status ?? "pendente",
+    priority: input.priority ?? "media",
+    createdAt: input.created_at ?? input.createdAt ?? new Date().toISOString(),
+    history: input.history ?? [],
+  };
+}
+
+function mapCommunity(input: any): Community {
+  return {
+    id: input.id,
+    name: input.name,
+    description: input.description ?? "",
+    topic: input.topic ?? input.name,
+    memberCount: input.member_count ?? input.memberCount ?? 0,
+    onlineCount: input.online_count ?? input.onlineCount ?? 0,
+    joined: Boolean(input.joined),
+    myAlias: input.my_alias ?? input.myAlias,
+    rules: input.rules_json ?? input.rules ?? [],
+  };
+}
+
+function mapAdminCommunity(input: any): AdminCommunity {
+  return {
+    ...mapCommunity(input),
+    status: input.status ?? "ativo",
+    messageCount: input.message_count ?? input.messageCount ?? 0,
+    createdAt: input.created_at ?? input.createdAt ?? new Date().toISOString(),
+  };
+}
+
+function mapCommunityMessage(input: any): CommunityMessage {
+  return {
+    id: input.id,
+    communityId: input.community_id,
+    alias: input.alias ?? input.alias_snapshot ?? "Participante",
+    text: input.body ?? input.text ?? "",
+    createdAt: input.created_at ?? new Date().toISOString(),
+    isMine: input.is_mine ?? input.isMine,
+    reported: input.reported,
+  };
+}
+
+async function loginWithSession(data: any, emailFallback = ""): Promise<User> {
+  const token = data.session?.access_token;
+  setAccessToken(token ?? null);
+  const authUser = data.user ? mapUser(data.user, emailFallback) : null;
+  saveCurrentUserId(authUser?.id);
+  try {
+    const me = await apiData<any>("/users/me");
+    const user = mapUser(me, authUser?.email ?? emailFallback);
+    saveCurrentUserId(user.id);
+    return user;
+  } catch {
+    if (authUser) return authUser;
+    throw new Error("Nao foi possivel carregar o perfil.");
+  }
+}
+
+// AUTH ------------------------------------------------------------------
 export const authService = {
-  async login(email: string, _password: string): Promise<User> {
-    const user = mockUsers.find((u) => u.email === email) ?? mockUsers[0];
-    return delay(cloneDeep(user));
-  },
-  async signup(data: { name: string; email: string }): Promise<User> {
-    return delay({
-      id: `u-${Date.now()}`,
-      name: data.name,
-      email: data.email,
-      initials: data.name
-        .split(" ")
-        .map((s) => s[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase(),
-      role: "usuario",
-      joinedAt: new Date().toISOString(),
+  async login(email: string, password: string): Promise<User> {
+    const data = await apiData<any>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
     });
+    return loginWithSession(data, email);
+  },
+  async signup(data: { name: string; email: string; password: string }): Promise<User> {
+    const registered = await apiData<any>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        displayName: data.name,
+        email: data.email,
+        password: data.password,
+      }),
+    });
+    if (registered.session?.access_token) return loginWithSession(registered, data.email);
+    return authService.login(data.email, data.password);
   },
   async continueAnonymously(): Promise<User> {
-    return delay({
-      id: `anonymous-${Date.now()}`,
-      name: "Pessoa anônima",
-      email: "",
-      initials: "A",
-      role: "usuario",
-      joinedAt: new Date().toISOString(),
-    });
+    const data = await apiData<any>("/auth/anonymous", { method: "POST" });
+    return loginWithSession(data);
   },
-  async recover(_email: string): Promise<{ ok: true }> {
-    return delay({ ok: true });
+  async recover(email: string): Promise<{ ok: true }> {
+    await apiData<unknown>("/auth/password/reset", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+    return { ok: true };
   },
 };
 
-// USERS ------------------------------------------------------------------
+// USERS -----------------------------------------------------------------
 export const userService = {
   async me(): Promise<User> {
-    return delay(cloneDeep(mockUsers[0]));
+    const data = await apiData<any>("/users/me");
+    const user = mapUser(data);
+    saveCurrentUserId(user.id);
+    return user;
   },
   async list(): Promise<User[]> {
     return delay(cloneDeep(mockUsers));
   },
   async updateRole(id: string, role: User["role"]): Promise<User> {
-    const u = { ...mockUsers.find((x) => x.id === id)!, role };
-    return delay(u);
+    const user = { ...mockUsers.find((item) => item.id === id)!, role };
+    return delay(user);
   },
 };
 
-// QUEUE / CHAT -----------------------------------------------------------
+// QUEUE / CHAT ----------------------------------------------------------
 export const queueService = {
   async list(): Promise<QueueEntry[]> {
-    return delay(cloneDeep(mockQueue));
+    const data = await apiData<any[]>("/conversations/volunteer/queue");
+    return data.map(mapQueueEntry);
   },
-  async join(): Promise<{ position: number; estimatedWait: number }> {
-    return delay({ position: 3, estimatedWait: 4 });
+  async join(): Promise<{ position: number; estimatedWait: number; conversationId: string }> {
+    const data = await apiData<any>("/conversations", { method: "POST" });
+    return { position: 1, estimatedWait: 4, conversationId: data.id };
   },
   async cancel(): Promise<{ ok: true }> {
-    return delay({ ok: true });
+    return { ok: true };
   },
 };
 
 export const chatService = {
   async getConversations(): Promise<Conversation[]> {
-    return delay(cloneDeep(mockConversations));
+    const data = await apiData<{ items: any[] }>("/conversations");
+    return data.items.map(mapConversation);
   },
   async getConversation(id: string): Promise<Conversation> {
-    const c = mockConversations.find((x) => x.id === id);
-    if (!c) throw new Error("Conversa não encontrada");
-    return delay(cloneDeep(c));
+    const data = await apiData<any>(`/conversations/${id}`);
+    return mapConversation(data);
   },
   async getMessages(id: string): Promise<ChatMessage[]> {
-    return delay(cloneDeep(mockMessages[id] ?? []));
+    const data = await apiData<any>(`/conversations/${id}`);
+    return (data.messages ?? []).map(mapMessage);
   },
   async sendMessage(
     conversationId: string,
     text: string,
-    author: ChatMessage["author"] = "user",
+    _author: ChatMessage["author"] = "user",
   ): Promise<ChatMessage> {
-    const msg: ChatMessage = {
-      id: `m-${Date.now()}`,
-      conversationId,
-      author,
-      text,
-      createdAt: new Date().toISOString(),
-      status: "sent",
-    };
-    return delay(msg, 600);
+    const data = await apiData<any>(`/conversations/${conversationId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+    return mapMessage(data);
   },
-  async endConversation(_id: string): Promise<{ ok: true }> {
-    return delay({ ok: true });
+  async endConversation(id: string): Promise<{ ok: true }> {
+    await apiData<unknown>(`/conversations/${id}/close`, {
+      method: "POST",
+      body: JSON.stringify({ reason: "usuario_encerrou" }),
+    });
+    return { ok: true };
   },
 };
 
-// VOLUNTEER --------------------------------------------------------------
+// VOLUNTEER -------------------------------------------------------------
 export const volunteerService = {
   async list(): Promise<Volunteer[]> {
     return delay(cloneDeep(mockVolunteers));
   },
   async setStatus(_id: string, status: VolunteerStatus): Promise<{ status: VolunteerStatus }> {
-    return delay({ status });
+    await apiData<unknown>("/admin/volunteers/availability", {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    return { status };
   },
   async accept(queueId: string): Promise<{ conversationId: string }> {
-    return delay({ conversationId: `c-${queueId}` });
+    const data = await apiData<any>(`/conversations/${queueId}/accept`, { method: "POST" });
+    return { conversationId: data.id };
   },
 };
 
-// APPLICATIONS -----------------------------------------------------------
+// APPLICATIONS ----------------------------------------------------------
 export const applicationService = {
   async list(): Promise<Application[]> {
-    return delay(cloneDeep(mockApplications));
+    const data = await apiData<any[]>("/admin/volunteers/applications");
+    return data.map(mapApplication);
   },
   async get(id: string): Promise<Application> {
-    const a = mockApplications.find((x) => x.id === id);
-    if (!a) throw new Error("Candidatura não encontrada");
-    return delay(cloneDeep(a));
+    const applications = await applicationService.list();
+    const application = applications.find((item) => item.id === id);
+    if (!application) throw new Error("Candidatura nao encontrada");
+    return application;
   },
   async submit(data: Omit<Application, "id" | "status" | "submittedAt">): Promise<Application> {
-    return delay({
-      ...data,
-      id: `a-${Date.now()}`,
-      submittedAt: new Date().toISOString(),
-      status: "pendente",
+    const response = await apiData<any>("/admin/volunteers/apply", {
+      method: "POST",
+      body: JSON.stringify({
+        motivation: data.motivation,
+        experience: `${data.experience}\nDisponibilidade: ${data.availability}`,
+      }),
     });
+    return mapApplication({ ...response, candidateAlias: data.candidateAlias });
   },
   async setStatus(
     id: string,
     status: ApplicationStatus,
   ): Promise<{ id: string; status: ApplicationStatus }> {
-    return delay({ id, status });
+    const backendStatus = toBackendApplicationStatus(status);
+    if (backendStatus !== "aprovada") {
+      throw new Error("O backend atual so expoe aprovacao de candidatura.");
+    }
+    await apiData<unknown>(`/admin/volunteers/${id}/approve`, { method: "POST" });
+    return { id, status };
   },
 };
 
-// REPORTS / MODERATION ---------------------------------------------------
+// REPORTS / MODERATION --------------------------------------------------
 export const reportService = {
   async list(): Promise<Report[]> {
-    return delay(cloneDeep(mockReports));
+    const data = await apiData<any[]>("/reports/admin/reports");
+    return data.map(mapReport);
   },
   async get(id: string): Promise<Report> {
-    const r = mockReports.find((x) => x.id === id);
-    if (!r) throw new Error("Denúncia não encontrada");
-    return delay(cloneDeep(r));
+    const reports = await reportService.list().catch(() => cloneDeep(mockReports));
+    const report = reports.find((item) => item.id === id);
+    if (!report) throw new Error("Denuncia nao encontrada");
+    return report;
   },
   async create(data: { reportedAlias: string; reason: string; details: string }): Promise<Report> {
-    return delay({
-      id: `r-${Date.now()}`,
-      reporterAlias: "Você",
-      ...data,
-      status: "pendente",
-      priority: "media",
-      createdAt: new Date().toISOString(),
-      history: [{ at: new Date().toISOString(), action: "Denúncia registrada", by: "Sistema" }],
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        data.reportedAlias,
+      );
+    if (!isUuid) {
+      return delay({
+        id: `r-${Date.now()}`,
+        reporterAlias: "Voce",
+        ...data,
+        status: "pendente",
+        priority: "media",
+        createdAt: new Date().toISOString(),
+        history: [{ at: new Date().toISOString(), action: "Denuncia registrada", by: "Sistema" }],
+      });
+    }
+    const response = await apiData<any>("/reports", {
+      method: "POST",
+      body: JSON.stringify({
+        targetType: "usuario",
+        targetId: data.reportedAlias,
+        reason: data.reason,
+        description: data.details,
+      }),
     });
+    return mapReport(response);
   },
   async setStatus(id: string, status: ReportStatus, note: string): Promise<{ ok: true }> {
-    void id;
-    void status;
-    void note;
-    return delay({ ok: true });
+    await apiData<unknown>(`/reports/admin/reports/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, decision: note || "Atualizado pela moderacao." }),
+    });
+    return { ok: true };
   },
 };
 
-// PSEUDONYMOUS COMMUNITIES ----------------------------------------------
+// PSEUDONYMOUS COMMUNITIES ---------------------------------------------
 export const communityService = {
   async list(): Promise<Community[]> {
-    return delay(cloneDeep(mockCommunities));
+    const data = await apiData<any[]>("/communities");
+    return data.map(mapCommunity);
   },
   async get(id: string): Promise<Community> {
-    const community = mockCommunities.find((item) => item.id === id);
-    if (!community) throw new Error("Grupo não encontrado");
-    return delay(cloneDeep(community));
+    const communities = await communityService.list();
+    const community = communities.find((item) => item.id === id);
+    if (!community) throw new Error("Grupo nao encontrado");
+    return community;
   },
   async join(id: string): Promise<Community> {
-    const community = mockCommunities.find((item) => item.id === id);
-    if (!community) throw new Error("Grupo não encontrado");
-    community.joined = true;
-    community.memberCount += 1;
-    community.myAlias ??= `Aurora Serena ${Math.floor(Math.random() * 90 + 10)}`;
-    return delay(cloneDeep(community));
+    await apiData<unknown>(`/communities/${id}/join`, { method: "POST" });
+    return communityService.get(id);
   },
   async leave(id: string): Promise<{ ok: true }> {
-    const community = mockCommunities.find((item) => item.id === id);
-    if (community?.joined) {
-      community.joined = false;
-      community.memberCount = Math.max(0, community.memberCount - 1);
-    }
-    return delay({ ok: true });
+    await apiData<unknown>(`/communities/${id}/leave`, { method: "POST" });
+    return { ok: true };
   },
   async getMessages(id: string): Promise<CommunityMessage[]> {
-    return delay(cloneDeep(mockCommunityMessages[id] ?? []));
+    const data = await apiData<{ items: any[] }>(`/communities/${id}/messages`);
+    return data.items.map(mapCommunityMessage);
   },
   async sendMessage(id: string, text: string): Promise<CommunityMessage> {
-    const community = mockCommunities.find((item) => item.id === id);
-    if (!community?.joined || !community.myAlias) throw new Error("Entre no grupo para conversar");
-    const message: CommunityMessage = {
-      id: `gm-${Date.now()}`,
-      communityId: id,
-      alias: community.myAlias,
-      text,
-      createdAt: new Date().toISOString(),
-      isMine: true,
-    };
-    mockCommunityMessages[id] = [...(mockCommunityMessages[id] ?? []), message];
-    return delay(cloneDeep(message), 350);
+    const data = await apiData<any>(`/communities/${id}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+    return mapCommunityMessage(data);
   },
   async revealIdentity(messageId: string, reason: string): Promise<CommunityIdentity> {
-    const message = Object.values(mockCommunityMessages)
-      .flat()
-      .find((item) => item.id === messageId);
-    if (!message?.reported)
-      throw new Error("A identidade só pode ser consultada em um caso denunciado");
-    if (reason.trim().length < 10)
-      throw new Error("Informe uma justificativa com pelo menos 10 caracteres");
-    return delay({
-      messageId,
-      alias: message.alias,
-      realName: "Pessoa protegida (exemplo)",
-      email: "conta.protegida@exemplo.com",
-      reason: reason.trim(),
-      revealedAt: new Date().toISOString(),
+    const data = await apiData<any>(`/communities/messages/${messageId}/reveal-identity`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
     });
+    return {
+      messageId: data.message_id,
+      alias: data.alias,
+      realName: data.display_name,
+      email: data.email ?? "",
+      reason,
+      revealedAt: new Date().toISOString(),
+    };
   },
 };
 
 export const adminCommunityService = {
   async list(): Promise<AdminCommunity[]> {
-    return delay(cloneDeep(mockAdminCommunities));
+    const data = await apiData<any[]>("/communities/admin");
+    return data.map(mapAdminCommunity);
   },
   async get(id: string): Promise<AdminCommunityDetail> {
-    const community = mockAdminCommunities.find((item) => item.id === id);
-    if (!community) throw new Error("Grupo não encontrado");
-    return delay({
-      ...cloneDeep(community),
-      members: cloneDeep(mockAdminCommunityMembers[id] ?? []),
-      messages: cloneDeep(mockCommunityMessages[id] ?? []),
-    });
+    const data = await apiData<any>(`/communities/admin/${id}`);
+    const community = mapAdminCommunity(data);
+    return {
+      ...community,
+      members: (data.members ?? mockAdminCommunityMembers[id] ?? []).map((member: any) => ({
+        userId: member.user_id ?? member.userId,
+        name: member.display_name ?? member.name ?? "Participante",
+        email: member.email ?? "",
+        alias: member.alias ?? "",
+        role: mapRole(member.platform_role ?? member.role),
+        status: member.status ?? "ativo",
+        joinedAt: member.joined_at ?? member.joinedAt ?? new Date().toISOString(),
+        messageCount: member.messageCount ?? 0,
+      })),
+      messages: (data.messages ?? []).map(mapCommunityMessage),
+    };
   },
   async create(input: { name: string; description: string }): Promise<AdminCommunity> {
-    const community: AdminCommunity = {
-      id: `g-${Date.now()}`,
-      name: input.name,
-      description: input.description,
-      topic: "Novo grupo",
-      memberCount: 0,
-      onlineCount: 0,
-      joined: false,
-      rules: [],
-      status: "ativo",
-      messageCount: 0,
-      createdAt: new Date().toISOString(),
-    };
-    mockAdminCommunities.unshift(community);
-    mockAdminCommunityMembers[community.id] = [];
-    mockCommunityMessages[community.id] = [];
-    return delay(cloneDeep(community));
+    const data = await apiData<any>("/communities/admin", {
+      method: "POST",
+      body: JSON.stringify({ ...input, rules: [] }),
+    });
+    return mapAdminCommunity(data);
   },
   async updateStatus(id: string, status: AdminCommunityStatus): Promise<AdminCommunity> {
-    const community = mockAdminCommunities.find((item) => item.id === id);
-    if (!community) throw new Error("Grupo não encontrado");
-    community.status = status;
-    return delay(cloneDeep(community));
+    const data = await apiData<any>(`/communities/admin/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    return mapAdminCommunity(data);
   },
   async update(id: string, input: { name: string; description: string }): Promise<AdminCommunity> {
-    const community = mockAdminCommunities.find((item) => item.id === id);
-    if (!community) throw new Error("Grupo não encontrado");
-    community.name = input.name;
-    community.description = input.description;
-    return delay(cloneDeep(community));
+    const data = await apiData<any>(`/communities/admin/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+    return mapAdminCommunity(data);
   },
   async updateMember(
     communityId: string,
     userId: string,
     status: "ativo" | "removido",
   ): Promise<{ ok: true }> {
-    const member = mockAdminCommunityMembers[communityId]?.find((item) => item.userId === userId);
-    if (!member) throw new Error("Participante não encontrado");
-    member.status = status;
-    return delay({ ok: true });
+    await apiData<unknown>(`/communities/admin/${communityId}/members/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    return { ok: true };
   },
-  async deleteMessage(communityId: string, messageId: string): Promise<{ ok: true }> {
-    mockCommunityMessages[communityId] = (mockCommunityMessages[communityId] ?? []).filter(
-      (message) => message.id !== messageId,
-    );
-    const community = mockAdminCommunities.find((item) => item.id === communityId);
-    if (community) community.messageCount = Math.max(0, community.messageCount - 1);
-    return delay({ ok: true });
+  async deleteMessage(_communityId: string, messageId: string): Promise<{ ok: true }> {
+    await apiData<unknown>(`/communities/admin/messages/${messageId}`, {
+      method: "DELETE",
+      body: JSON.stringify({ reason: "Removido pela moderacao do VIDA+." }),
+    });
+    return { ok: true };
   },
 };
 
-// METRICS ----------------------------------------------------------------
+// METRICS ---------------------------------------------------------------
 export const metricsService = {
   async overview(): Promise<Metrics> {
-    return delay(cloneDeep(mockMetrics));
+    const data = await apiData<any>("/conversations/volunteer/dashboard");
+    return {
+      totalUsers: 0,
+      totalVolunteers: data.onlineVolunteers ?? 0,
+      activeConversations: data.activeChats ?? 0,
+      conversationsToday: data.activeChats ?? 0,
+      avgWaitMinutes: data.pendingChats ? 5 : 0,
+      satisfactionRate: 0,
+      weekly: [],
+    };
   },
 };

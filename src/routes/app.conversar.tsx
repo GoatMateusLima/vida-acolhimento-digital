@@ -20,12 +20,14 @@ function Page() {
   const [step, setStep] = useState<Step>("intro");
   const [pos, setPos] = useState(3);
   const [eta, setEta] = useState(4);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const join = useMutation({
     mutationFn: queueService.join,
     onSuccess: (d) => {
       setPos(d.position);
       setEta(d.estimatedWait);
+      setConversationId(d.conversationId);
       setStep("waiting");
     },
   });
@@ -103,7 +105,8 @@ function Page() {
             Voluntário C. está pronto para te escutar.
           </p>
           <Button
-            onClick={() => navigate({ to: "/app/chat/$id", params: { id: "c1" } })}
+            onClick={() => navigate({ to: "/app/chat/$id", params: { id: conversationId ?? "" } })}
+            disabled={!conversationId}
             size="lg"
             className="mt-6 h-12 px-6"
           >
