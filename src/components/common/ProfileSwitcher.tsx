@@ -27,6 +27,8 @@ export function ProfileSwitcher() {
   const { role, setRole, setAuthenticated } = useProfile();
   const navigate = useNavigate();
 
+  if (!import.meta.env.DEV) return null;
+
   return (
     <div className="flex items-center gap-2">
       <span className="hidden text-xs font-medium uppercase tracking-wider text-muted-foreground sm:inline">
