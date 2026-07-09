@@ -31,6 +31,9 @@ function Page() {
       setShowCreate(false);
       toast.success("Grupo criado.");
     },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar o grupo.");
+    },
   });
   const status = useMutation({
     mutationFn: ({ id, value }: { id: string; value: AdminCommunityStatus }) =>
@@ -38,6 +41,9 @@ function Page() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-communities"] });
       toast.success("Status do grupo atualizado.");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o grupo.");
     },
   });
 
@@ -82,6 +88,14 @@ function Page() {
             </div>
           </div>
         </section>
+      )}
+
+      {groups.isError && (
+        <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          {groups.error instanceof Error
+            ? groups.error.message
+            : "Não foi possível carregar os grupos."}
+        </div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
