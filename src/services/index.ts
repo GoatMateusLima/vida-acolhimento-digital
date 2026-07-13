@@ -424,6 +424,12 @@ export const reportService = {
     const data = await apiData<any>(`/reports/admin/reports/${id}`);
     return mapReport(data);
   },
+  /** Denúncias feitas pelo usuário logado */
+  async listMine(): Promise<Report[]> {
+    const data = await apiData<any>("/reports/my");
+    const list: any[] = Array.isArray(data) ? data : (data.items ?? []);
+    return list.map(mapReport);
+  },
   async create(data: { reportedAlias: string; reason: string; details: string }): Promise<Report> {
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(

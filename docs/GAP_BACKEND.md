@@ -386,7 +386,46 @@ O frontend espera: `pendente`, `em_analise`, `aprovada`, `rejeitada`.
 
 ---
 
-## 10. RESUMO EXECUTIVO — PRIORIDADE
+## 10. NOVO ENDPOINT NECESSÁRIO — Minhas denúncias (usuário)
+
+O frontend agora tem uma tela `/app/denuncias` onde o usuário vê as denúncias
+que ele próprio enviou e acompanha o status.
+
+**Endpoint necessário:**
+```
+GET /api/reports/my
+Authorization: Bearer <token>  (qualquer usuário autenticado)
+```
+
+**Resposta esperada** (`data`): array das denúncias do usuário logado:
+```json
+[
+  {
+    "id": "uuid",
+    "target_id": "alias-ou-uuid-do-alvo",
+    "reason": "Conduta inadequada",
+    "description": "Detalhes da ocorrência.",
+    "status": "pendente",
+    "priority": "media",
+    "created_at": "2026-01-01T00:00:00Z",
+    "history": [
+      { "at": "2026-01-01T00:00:00Z", "action": "Denúncia registrada", "by": "Sistema" }
+    ]
+  }
+]
+```
+
+> Atenção: não expor dados do moderador nem decisões internas ao usuário comum.
+> Expor apenas: `id`, `reason`, `description`, `status`, `priority`,
+> `created_at`, `history` (somente ações públicas como "registrada" e
+> "em análise" — nunca o nome do moderador).
+
+**Impacto se não implementado:** O frontend exibe uma mensagem de fallback
+informando que o acompanhamento está sendo implementado, sem quebrar a tela.
+
+---
+
+## 11. RESUMO EXECUTIVO — PRIORIDADE (ATUALIZADO)
 
 | # | Gap | Impacto | Esforço |
 |---|-----|---------|---------|
@@ -400,10 +439,11 @@ O frontend espera: `pendente`, `em_analise`, `aprovada`, `rejeitada`.
 | 8 | `GET /communities` incluir `my_alias` | Apelido do usuário não aparece nos grupos | Baixo |
 | 9 | `POST /communities/messages/:id/reveal-identity` — campos corretos | Revelar identidade quebra | Baixo |
 | 10 | `sender_id` em todas as mensagens | Mensagens aparecem como do voluntário errado | Crítico |
+| 11 | `GET /reports/my` — denúncias do usuário logado | Usuário não vê suas denúncias | Baixo |
 
 ---
 
-## 11. O QUE JÁ ESTÁ 100% PRONTO (não precisa mudar nada)
+## 12. O QUE JÁ ESTÁ 100% PRONTO (não precisa mudar nada)
 
 - `POST /auth/login`
 - `POST /auth/anonymous`

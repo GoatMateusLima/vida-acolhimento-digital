@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -25,11 +25,20 @@ export const Route = createFileRoute("/app/denuncia")({
   component: Page,
 });
 
-const REASONS = ["Conduta inadequada", "Linguagem agressiva", "Assédio", "Spam", "Outro"];
+const REASONS = [
+  "Conduta inadequada",
+  "Linguagem agressiva",
+  "Assédio",
+  "Spam",
+  "Ameaça ou violência",
+  "Conteúdo inapropriado",
+  "Outro",
+];
 
 function Page() {
   useAuthGuard();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const {
     register,
     handleSubmit,
@@ -41,11 +50,15 @@ function Page() {
     defaultValues: { reportedAlias: "", reason: "", details: "" },
   });
   const reason = watch("reason");
+
   const m = useMutation({
     mutationFn: reportService.create,
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-reports"] });
+      // sinaliza que acabou de enviar para a tela de acompanhamento mostrar confirmação
+      sessionStorage.setItem("vida:just-reported", "1");
       toast.success("Denúncia registrada. Obrigado por nos ajudar.");
-      navigate({ to: "/app" });
+      navigate({ to: "/app/denuncias" });
     },
     onError: () => toast.error("Não foi possível registrar a denúncia. Tente novamente."),
   });
@@ -53,20 +66,33 @@ function Page() {
   return (
     <AppShell>
       <PageHeader
-        title="Denunciar"
-        description="Sua denúncia será analisada pela equipe de moderação. Nenhuma ação é automática."
+        title="Fazer uma denúncia"
+        description="Sua denúncia é confidencial e será analisada pela equipe de moderação. Nenhuma ação é automática."
+        actions={
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/app/denuncias">Ver minhas denúncias</Link>
+          </Button>
+        }
       />
-      <form onSubmit={handleSubmit((v) => m.mutate(v))} className="max-w-2xl space-y-4" noValidate>
+      <form onSubmit={handleSubmit((v) => m.mutate(v))} className="max-w-2xl space-y-5" noValidate>
         <Field label="Quem você está denunciando?" id="alias" error={errors.reportedAlias?.message}>
-          <Input id="alias" placeholder="Apelido da conversa" {...register("reportedAlias")} />
+          <Input
+            id="alias"
+            placeholder="Apelido exibido na conversa ou no grupo"
+            {...register("reportedAlias")}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Use o apelido exibido durante a conversa ou mensagem. Não precisa ser o nome real.
+          </p>
         </Field>
-        <Field label="Motivo" id="reason" error={errors.reason?.message}>
+
+        <Field label="Motivo da denúncia" id="reason" error={errors.reason?.message}>
           <Select
             value={reason}
             onValueChange={(v) => setValue("reason", v, { shouldValidate: true })}
           >
             <SelectTrigger id="reason">
-              <SelectValue placeholder="Selecione" />
+              <SelectValue placeholder="Selecione o motivo" />
             </SelectTrigger>
             <SelectContent>
               {REASONS.map((r) => (
@@ -77,12 +103,32 @@ function Page() {
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Detalhes" id="details" error={errors.details?.message}>
-          <Textarea id="details" rows={5} {...register("details")} />
+
+        <Field label="Descreva o ocorrido" id="details" error={errors.details?.message}>
+          <Textarea
+            id="details"
+            rows={5}
+            placeholder="Descreva o que aconteceu com o máximo de detalhes que se sentir confortável em compartilhar."
+            {...register("details")}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Mínimo de 10 caracteres. Máximo de 1000.
+          </p>
         </Field>
-        <Button type="submit" disabled={m.isPending}>
-          {m.isPending ? "Enviando…" : "Enviar denúncia"}
-        </Button>
+
+        <div className="flex items-center gap-3">
+          <Button type="submit" disabled={m.isPending}>
+            {m.isPending ? "Enviando…" : "Enviar denúncia"}
+          </Button>
+          <Button type="button" variant="ghost" onClick={() => navigate({ to: "/app" })}>
+            Cancelar
+          </Button>
+        </div>
+
+        <p className="rounded-xl bg-muted/50 p-4 text-xs text-muted-foreground">
+          Sua identidade não será revelada ao denunciado. A moderação tem acesso apenas ao
+          necessário para a investigação.
+        </p>
       </form>
     </AppShell>
   );

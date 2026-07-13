@@ -28,7 +28,10 @@ function Page() {
   });
   const m = useMutation({
     mutationFn: (v: Input) => authService.recover(v.email),
-    onSuccess: () => toast.success("Se a conta existir, enviaremos as instruções."),
+    onSuccess: () =>
+      toast.success(
+        "Se a conta existir, enviaremos um link. Clique nele para criar uma nova senha.",
+      ),
   });
 
   return (

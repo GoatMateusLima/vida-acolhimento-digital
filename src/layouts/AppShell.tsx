@@ -35,6 +35,7 @@ const NAV: Record<ProfileRole, Item[]> = {
     { to: "/app/conversar", label: "Conversar", icon: MessageCircle },
     { to: "/app/comunidades", label: "Grupos", icon: UsersRound },
     { to: "/app/historico", label: "Histórico", icon: History },
+    { to: "/app/denuncias", label: "Denúncias", icon: FileWarning },
     { to: "/app/perfil", label: "Perfil", icon: User },
   ],
   voluntario: [
@@ -99,7 +100,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </ul>
           <div className="mt-6 border-t pt-4 space-y-1">
             <NavLink item={{ to: "/app/preferencias", label: "Preferências", icon: Settings }} />
-            <NavLink item={{ to: "/app/denuncia", label: "Denunciar", icon: FileWarning }} />
           </div>
         </nav>
         <div className="border-t p-3">
@@ -167,10 +167,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                         ))}
                         <MobileMenuLink
                           item={{ to: "/app/preferencias", label: "Preferências", icon: Settings }}
-                          close={() => setMoreOpen(false)}
-                        />
-                        <MobileMenuLink
-                          item={{ to: "/app/denuncia", label: "Denunciar", icon: FileWarning }}
                           close={() => setMoreOpen(false)}
                         />
                         <div className="mt-1" onClick={() => setMoreOpen(false)}>

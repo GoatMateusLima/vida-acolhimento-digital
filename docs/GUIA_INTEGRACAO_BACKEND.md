@@ -37,7 +37,7 @@ Backend Render:
 
 ```env
 CORS_ORIGINS=https://vidafrontend.netlify.app,http://localhost:5173
-PASSWORD_RESET_REDIRECT_URL=https://vidafrontend.netlify.app/recuperar-senha
+PASSWORD_RESET_REDIRECT_URL=https://vidafrontend.netlify.app/nova-senha
 NODE_ENV=production
 TRUST_PROXY=1
 ```

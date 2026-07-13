@@ -14,6 +14,7 @@ import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as CadastroRouteImport } from './routes/cadastro'
@@ -30,6 +31,7 @@ import { Route as AppPrivacidadeRouteImport } from './routes/app.privacidade'
 import { Route as AppPreferenciasRouteImport } from './routes/app.preferencias'
 import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppHistoricoRouteImport } from './routes/app.historico'
+import { Route as AppDenunciasRouteImport } from './routes/app.denuncias'
 import { Route as AppDenunciaRouteImport } from './routes/app.denuncia'
 import { Route as AppConversarRouteImport } from './routes/app.conversar'
 import { Route as AppComunidadesRouteImport } from './routes/app.comunidades'
@@ -69,6 +71,11 @@ const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovaSenhaRoute = NovaSenhaRouteImport.update({
+  id: '/nova-senha',
+  path: '/nova-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -149,6 +156,11 @@ const AppPerfilRoute = AppPerfilRouteImport.update({
 const AppHistoricoRoute = AppHistoricoRouteImport.update({
   id: '/app/historico',
   path: '/app/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppDenunciasRoute = AppDenunciasRouteImport.update({
+  id: '/app/denuncias',
+  path: '/app/denuncias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppDenunciaRoute = AppDenunciaRouteImport.update({
@@ -232,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/cadastro': typeof CadastroRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/login': typeof LoginRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/privacidade': typeof PrivacidadeRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/seguranca': typeof SegurancaRoute
@@ -244,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/app/comunidades': typeof AppComunidadesRouteWithChildren
   '/app/conversar': typeof AppConversarRoute
   '/app/denuncia': typeof AppDenunciaRoute
+  '/app/denuncias': typeof AppDenunciasRoute
   '/app/historico': typeof AppHistoricoRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/preferencias': typeof AppPreferenciasRoute
@@ -270,6 +284,7 @@ export interface FileRoutesByTo {
   '/cadastro': typeof CadastroRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/login': typeof LoginRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/privacidade': typeof PrivacidadeRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/seguranca': typeof SegurancaRoute
@@ -279,6 +294,7 @@ export interface FileRoutesByTo {
   '/app/candidatura': typeof AppCandidaturaRoute
   '/app/conversar': typeof AppConversarRoute
   '/app/denuncia': typeof AppDenunciaRoute
+  '/app/denuncias': typeof AppDenunciasRoute
   '/app/historico': typeof AppHistoricoRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/preferencias': typeof AppPreferenciasRoute
@@ -306,6 +322,7 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/login': typeof LoginRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/privacidade': typeof PrivacidadeRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/seguranca': typeof SegurancaRoute
@@ -318,6 +335,7 @@ export interface FileRoutesById {
   '/app/comunidades': typeof AppComunidadesRouteWithChildren
   '/app/conversar': typeof AppConversarRoute
   '/app/denuncia': typeof AppDenunciaRoute
+  '/app/denuncias': typeof AppDenunciasRoute
   '/app/historico': typeof AppHistoricoRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/preferencias': typeof AppPreferenciasRoute
@@ -346,6 +364,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/como-funciona'
     | '/login'
+    | '/nova-senha'
     | '/privacidade'
     | '/recuperar-senha'
     | '/seguranca'
@@ -358,6 +377,7 @@ export interface FileRouteTypes {
     | '/app/comunidades'
     | '/app/conversar'
     | '/app/denuncia'
+    | '/app/denuncias'
     | '/app/historico'
     | '/app/perfil'
     | '/app/preferencias'
@@ -384,6 +404,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/como-funciona'
     | '/login'
+    | '/nova-senha'
     | '/privacidade'
     | '/recuperar-senha'
     | '/seguranca'
@@ -393,6 +414,7 @@ export interface FileRouteTypes {
     | '/app/candidatura'
     | '/app/conversar'
     | '/app/denuncia'
+    | '/app/denuncias'
     | '/app/historico'
     | '/app/perfil'
     | '/app/preferencias'
@@ -419,6 +441,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/como-funciona'
     | '/login'
+    | '/nova-senha'
     | '/privacidade'
     | '/recuperar-senha'
     | '/seguranca'
@@ -431,6 +454,7 @@ export interface FileRouteTypes {
     | '/app/comunidades'
     | '/app/conversar'
     | '/app/denuncia'
+    | '/app/denuncias'
     | '/app/historico'
     | '/app/perfil'
     | '/app/preferencias'
@@ -458,6 +482,7 @@ export interface RootRouteChildren {
   CadastroRoute: typeof CadastroRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   LoginRoute: typeof LoginRoute
+  NovaSenhaRoute: typeof NovaSenhaRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   SegurancaRoute: typeof SegurancaRoute
@@ -470,6 +495,7 @@ export interface RootRouteChildren {
   AppComunidadesRoute: typeof AppComunidadesRouteWithChildren
   AppConversarRoute: typeof AppConversarRoute
   AppDenunciaRoute: typeof AppDenunciaRoute
+  AppDenunciasRoute: typeof AppDenunciasRoute
   AppHistoricoRoute: typeof AppHistoricoRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppPreferenciasRoute: typeof AppPreferenciasRoute
@@ -521,6 +547,13 @@ declare module '@tanstack/react-router' {
       path: '/privacidade'
       fullPath: '/privacidade'
       preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nova-senha': {
+      id: '/nova-senha'
+      path: '/nova-senha'
+      fullPath: '/nova-senha'
+      preLoaderRoute: typeof NovaSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -633,6 +666,13 @@ declare module '@tanstack/react-router' {
       path: '/app/historico'
       fullPath: '/app/historico'
       preLoaderRoute: typeof AppHistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/denuncias': {
+      id: '/app/denuncias'
+      path: '/app/denuncias'
+      fullPath: '/app/denuncias'
+      preLoaderRoute: typeof AppDenunciasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/denuncia': {
@@ -788,6 +828,7 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroRoute: CadastroRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
   LoginRoute: LoginRoute,
+  NovaSenhaRoute: NovaSenhaRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,
   SegurancaRoute: SegurancaRoute,
@@ -800,6 +841,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppComunidadesRoute: AppComunidadesRouteWithChildren,
   AppConversarRoute: AppConversarRoute,
   AppDenunciaRoute: AppDenunciaRoute,
+  AppDenunciasRoute: AppDenunciasRoute,
   AppHistoricoRoute: AppHistoricoRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppPreferenciasRoute: AppPreferenciasRoute,
