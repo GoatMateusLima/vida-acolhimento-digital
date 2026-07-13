@@ -44,7 +44,44 @@ export function clearSession() {
   window.localStorage.removeItem("vidaplus:auth");
 }
 
-export async function http<T>(path: string, init: RequestInit = {}): Promise<T> {
+let activeRefresh: Promise<boolean> | null = null;
+
+async function refreshAccessToken() {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
+
+  if (!activeRefresh) {
+    activeRefresh = (async () => {
+      try {
+        const response = await fetch(API_BASE_URL + "/auth/refresh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+        const payload = safeJson<any>(await response.text());
+        const session = payload?.data?.session;
+
+        if (!response.ok || !session?.access_token) return false;
+
+        setAccessToken(session.access_token);
+        setRefreshToken(session.refresh_token ?? refreshToken);
+        return true;
+      } catch {
+        return false;
+      } finally {
+        activeRefresh = null;
+      }
+    })();
+  }
+
+  return activeRefresh;
+}
+
+export async function http<T>(
+  path: string,
+  init: RequestInit = {},
+  retryAfterRefresh = true,
+): Promise<T> {
   const token = getAccessToken();
   const headers = new Headers(init.headers);
 
@@ -53,10 +90,10 @@ export async function http<T>(path: string, init: RequestInit = {}): Promise<T> 
   }
 
   if (token && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${token}`);
+    headers.set("Authorization", "Bearer " + token);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(API_BASE_URL + path, {
     ...init,
     headers,
   });
@@ -65,10 +102,19 @@ export async function http<T>(path: string, init: RequestInit = {}): Promise<T> 
   const body = text ? safeJson<ApiErrorBody | T>(text) : null;
 
   if (!response.ok) {
+    if (response.status === 401 && retryAfterRefresh && (await refreshAccessToken())) {
+      return http<T>(path, init, false);
+    }
+
+    if (response.status === 401) {
+      clearSession();
+      if (typeof window !== "undefined") window.location.assign("/login");
+    }
+
     const message =
       body && typeof body === "object" && "message" in body && body.message
         ? body.message
-        : `HTTP ${response.status}`;
+        : "HTTP " + response.status;
     throw new Error(message);
   }
 

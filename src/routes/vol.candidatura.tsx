@@ -1,10 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { applicationService } from "@/services";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { applicationService, moderatorApplicationService } from "@/services";
 import { fmtDateTime } from "@/utils/format";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 
@@ -15,10 +19,25 @@ export const Route = createFileRoute("/vol/candidatura")({
 
 function Page() {
   useAuthGuard();
+  const [motivation, setMotivation] = useState("");
+  const [experience, setExperience] = useState("");
 
   // A rota /me garante que nenhum usuário receba a candidatura de outra pessoa.
   const q = useQuery({ queryKey: ["my-application"], queryFn: applicationService.getMine });
   const application = q.data;
+  const moderatorApplication = useQuery({
+    queryKey: ["my-moderator-application"],
+    queryFn: moderatorApplicationService.getMine,
+    retry: false,
+  });
+  const submitModerator = useMutation({
+    mutationFn: () => moderatorApplicationService.submit({ motivation, experience }),
+    onSuccess: () => {
+      toast.success("Candidatura para moderador enviada ao administrador.");
+      moderatorApplication.refetch();
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   return (
     <AppShell>
@@ -26,7 +45,7 @@ function Page() {
         title="Minha candidatura"
         description="Acompanhe o status da sua candidatura como voluntário."
       />
-      <div className="max-w-xl rounded-2xl border bg-card p-6">
+      <div className="max-w-2xl rounded-2xl border bg-card p-6">
         {q.isPending ? (
           <div className="space-y-3">
             <Skeleton className="h-6 w-32 rounded-lg" />
@@ -86,6 +105,60 @@ function Page() {
           </>
         )}
       </div>
+      <section className="mt-6 max-w-2xl rounded-2xl border bg-card p-6">
+        <h2 className="font-display text-xl font-semibold">Candidatura para moderador</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Voluntários podem solicitar esta função. Somente administradores podem aprovar.
+        </p>
+        {moderatorApplication.isPending ? (
+          <div className="mt-5 space-y-3">
+            <Skeleton className="h-6 w-28 rounded-lg" />
+            <Skeleton className="h-4 w-full rounded-lg" />
+          </div>
+        ) : moderatorApplication.data ? (
+          <div className="mt-5">
+            <div className="flex items-center gap-3">
+              <StatusBadge status={moderatorApplication.data.status} />
+              <span className="text-sm text-muted-foreground">
+                Enviada em {fmtDateTime(moderatorApplication.data.submittedAt)}
+              </span>
+            </div>
+            <p className="mt-4 text-sm">
+              <strong>Motivação:</strong> {moderatorApplication.data.motivation}
+            </p>
+            {moderatorApplication.data.experience && (
+              <p className="mt-2 text-sm">
+                <strong>Experiência:</strong> {moderatorApplication.data.experience}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="mt-5 space-y-4">
+            <Textarea
+              value={motivation}
+              onChange={(event) => setMotivation(event.target.value)}
+              placeholder="Por que deseja atuar como moderador?"
+              rows={5}
+            />
+            <Textarea
+              value={experience}
+              onChange={(event) => setExperience(event.target.value)}
+              placeholder="Descreva sua experiência como voluntário."
+              rows={4}
+            />
+            <Button
+              disabled={
+                motivation.trim().length < 10 ||
+                experience.trim().length < 5 ||
+                submitModerator.isPending
+              }
+              onClick={() => submitModerator.mutate()}
+            >
+              {submitModerator.isPending ? "Enviando..." : "Enviar candidatura"}
+            </Button>
+          </div>
+        )}
+      </section>
     </AppShell>
   );
 }
