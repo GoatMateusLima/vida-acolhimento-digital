@@ -16,9 +16,9 @@ export const Route = createFileRoute("/vol/candidatura")({
 function Page() {
   useAuthGuard();
 
-  // Carrega a lista e exibe a candidatura mais recente do voluntário logado
-  const q = useQuery({ queryKey: ["my-application"], queryFn: applicationService.list });
-  const application = q.data?.[0];
+  // A rota /me garante que nenhum usuário receba a candidatura de outra pessoa.
+  const q = useQuery({ queryKey: ["my-application"], queryFn: applicationService.getMine });
+  const application = q.data;
 
   return (
     <AppShell>

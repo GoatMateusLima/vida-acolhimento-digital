@@ -324,8 +324,8 @@ export const queueService = {
 
 export const chatService = {
   async getConversations(): Promise<Conversation[]> {
-    // backend retorna array direto em data (não { items: [] })
     const data = await apiData<any>("/conversations");
+    // backend retorna { items, page, limit, total }
     const list: any[] = Array.isArray(data) ? data : (data.items ?? []);
     return list.map(mapConversation);
   },
@@ -379,6 +379,10 @@ export const volunteerService = {
 
 // APPLICATIONS ----------------------------------------------------------
 export const applicationService = {
+  async getMine(): Promise<Application> {
+    const data = await apiData<any>("/admin/volunteers/applications/me");
+    return mapApplication(data);
+  },
   async list(): Promise<Application[]> {
     const data = await apiData<any[]>("/admin/volunteers/applications");
     return data.map(mapApplication);

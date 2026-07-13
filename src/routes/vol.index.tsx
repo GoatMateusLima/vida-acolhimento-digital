@@ -40,8 +40,7 @@ function Page() {
 
   const myApplication = useQuery({
     queryKey: ["my-application"],
-    queryFn: applicationService.list,
-    select: (data) => data[0],
+    queryFn: applicationService.getMine,
   });
 
   const setStatusM = useMutation({

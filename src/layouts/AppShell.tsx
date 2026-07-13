@@ -69,13 +69,16 @@ export function AppShell({ children }: { children: ReactNode }) {
     setCurrentUser(null);
     navigate({ to: "/login", replace: true });
   }
-  const routeRole: ProfileRole = pathname.startsWith("/vol")
-    ? "voluntario"
-    : pathname.startsWith("/mod")
-      ? "moderador"
-      : pathname.startsWith("/admin")
-        ? "administrador"
-        : "usuario";
+  const routeRole: ProfileRole =
+    pathname === "/app/preferencias"
+      ? role
+      : pathname.startsWith("/vol")
+        ? "voluntario"
+        : pathname.startsWith("/mod")
+          ? "moderador"
+          : pathname.startsWith("/admin")
+            ? "administrador"
+            : "usuario";
   const items = NAV[routeRole] ?? NAV[role];
   const [moreOpen, setMoreOpen] = useState(false);
   const mobileItems =

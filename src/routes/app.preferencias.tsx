@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useProfile } from "@/contexts/ProfileContext";
 
 export const Route = createFileRoute("/app/preferencias")({
   head: () => ({ meta: [{ title: "Preferências — VIDA+" }] }),
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/app/preferencias")({
 function Page() {
   useAuthGuard();
   const { theme, toggle } = useTheme();
+  const { role } = useProfile();
   const [notif, setNotif] = useState(true);
   const [reduce, setReduce] = useState(false);
 
@@ -29,13 +31,15 @@ function Page() {
           checked={theme === "dark"}
           onChange={toggle}
         />
-        <Row
-          id="notif"
-          label="Notificações"
-          desc="Receba alertas quando um voluntário ficar disponível."
-          checked={notif}
-          onChange={() => setNotif(!notif)}
-        />
+        {role !== "administrador" && (
+          <Row
+            id="notif"
+            label="Notificações"
+            desc="Receba alertas quando um voluntário ficar disponível."
+            checked={notif}
+            onChange={() => setNotif(!notif)}
+          />
+        )}
         <Row
           id="reduce"
           label="Reduzir animações"
