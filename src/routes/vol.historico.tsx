@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { chatService } from "@/services";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { fmtDateTime } from "@/utils/format";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/vol/historico")({
   head: () => ({ meta: [{ title: "Histórico de atendimentos — VIDA+" }] }),
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/vol/historico")({
 });
 
 function Page() {
+  useAuthGuard();
   const q = useQuery({ queryKey: ["conversations"], queryFn: chatService.getConversations });
   return (
     <AppShell>

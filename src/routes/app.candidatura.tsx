@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { applicationSchema, type ApplicationInput } from "@/utils/validators";
 import { applicationService } from "@/services";
 import { Field } from "./login";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/app/candidatura")({
   head: () => ({ meta: [{ title: "Quero ser voluntário — VIDA+" }] }),
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/app/candidatura")({
 });
 
 function Page() {
+  useAuthGuard();
   const navigate = useNavigate();
   const {
     register,
@@ -33,6 +35,7 @@ function Page() {
       toast.success("Candidatura enviada! Avisaremos pelo e-mail.");
       navigate({ to: "/app" });
     },
+    onError: () => toast.error("Não foi possível enviar a candidatura. Tente novamente."),
   });
 
   return (

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { loginSchema, type LoginInput } from "@/utils/validators";
 import { authService } from "@/services";
 import { useProfile } from "@/contexts/ProfileContext";
+import { roleHome } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Entrar — VIDA+" }] }),
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/login")({
 
 function Page() {
   const navigate = useNavigate();
-  const { setAuthenticated, setRole } = useProfile();
+  const { setAuthenticated, setRole, setCurrentUser } = useProfile();
   const {
     register,
     handleSubmit,
@@ -33,8 +34,9 @@ function Page() {
     onSuccess: (user) => {
       setRole(user.role);
       setAuthenticated(true);
+      setCurrentUser(user);
       toast.success("Bem-vindo(a) de volta!");
-      navigate({ to: "/app" });
+      navigate({ to: roleHome(user.role) });
     },
     onError: () => toast.error("Não foi possível entrar. Tente novamente."),
   });
@@ -43,6 +45,7 @@ function Page() {
     onSuccess: () => {
       setRole("usuario");
       setAuthenticated(true);
+      setCurrentUser(null); // anônimo não tem perfil completo
       toast.success("Você entrou anonimamente.");
       navigate({ to: "/app/comunidades" });
     },

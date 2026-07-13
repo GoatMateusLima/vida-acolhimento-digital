@@ -13,12 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { queueService, volunteerService } from "@/services";
+import { applicationService, metricsService, queueService, volunteerService } from "@/services";
 import { fmtRelative } from "@/utils/format";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { VolunteerStatus } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/vol/")({
   head: () => ({ meta: [{ title: "Painel do voluntário — VIDA+" }] }),
@@ -28,7 +29,20 @@ export const Route = createFileRoute("/vol/")({
 function Page() {
   const navigate = useNavigate();
   const [status, setStatus] = useState<VolunteerStatus>("online");
+
+  useAuthGuard();
+
   const q = useQuery({ queryKey: ["queue"], queryFn: queueService.list });
+  const dashboard = useQuery({
+    queryKey: ["volunteer-dashboard"],
+    queryFn: metricsService.overview,
+  });
+
+  const myApplication = useQuery({
+    queryKey: ["my-application"],
+    queryFn: applicationService.list,
+    select: (data) => data[0],
+  });
 
   const setStatusM = useMutation({
     mutationFn: (s: VolunteerStatus) => volunteerService.setStatus("me", s),
@@ -62,9 +76,15 @@ function Page() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Stat label="Atendidos hoje" value="3" />
-        <Stat label="Tempo médio" value="38 min" />
-        <Stat label="Avaliação" value="4.9 ★" />
+        <Stat
+          label="Conversas ativas"
+          value={dashboard.data ? String(dashboard.data.activeConversations) : "—"}
+        />
+        <Stat label="Na fila agora" value={q.data ? String(q.data.length) : "—"} />
+        <Stat
+          label="Voluntários online"
+          value={dashboard.data ? String(dashboard.data.totalVolunteers) : "—"}
+        />
       </div>
 
       <section className="mt-8">
@@ -119,8 +139,16 @@ function Page() {
       <section className="mt-8">
         <h2 className="mb-3 font-display text-xl font-semibold">Status da sua candidatura</h2>
         <div className="flex items-center gap-3 rounded-2xl border bg-card p-4">
-          <StatusBadge status="aprovado" />
-          <p className="text-sm text-muted-foreground">Você está apto a atender.</p>
+          <StatusBadge status={myApplication.data?.status ?? "pendente"} />
+          <p className="text-sm text-muted-foreground">
+            {myApplication.data?.status === "aprovado"
+              ? "Você está apto a atender."
+              : myApplication.data?.status === "pendente"
+                ? "Candidatura em análise."
+                : myApplication.data?.status === "recusado"
+                  ? "Candidatura não aprovada."
+                  : "Carregando…"}
+          </p>
           <Link to="/vol/candidatura" className="ml-auto text-sm text-primary hover:underline">
             Ver detalhes
           </Link>

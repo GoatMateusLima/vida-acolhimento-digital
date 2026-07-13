@@ -15,6 +15,7 @@ import {
 import { applicationService } from "@/services";
 import { fmtRelative } from "@/utils/format";
 import type { ApplicationStatus } from "@/types";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/admin/candidaturas/")({
   head: () => ({ meta: [{ title: "Candidaturas — VIDA+" }] }),
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/admin/candidaturas/")({
 });
 
 function Page() {
+  useAuthGuard();
   const q = useQuery({ queryKey: ["applications"], queryFn: applicationService.list });
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<ApplicationStatus | "todos">("todos");

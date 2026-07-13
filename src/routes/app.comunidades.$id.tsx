@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Flag, LogOut, Send, ShieldCheck, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/layouts/AppShell";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { communityService } from "@/services";
 import { fmtRelative } from "@/utils/format";
 import { cn } from "@/lib/utils";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/app/comunidades/$id")({
   head: () => ({ meta: [{ title: "Grupo de apoio — VIDA+" }] }),
@@ -16,15 +17,23 @@ export const Route = createFileRoute("/app/comunidades/$id")({
 });
 
 function Page() {
+  useAuthGuard();
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
   const group = useQuery({ queryKey: ["community", id], queryFn: () => communityService.get(id) });
   const messages = useQuery({
     queryKey: ["community-messages", id],
     queryFn: () => communityService.getMessages(id),
+    refetchInterval: 8000, // polling leve — sem SSE para comunidades
   });
+
+  // Scroll automático ao receber novas mensagens
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages.data?.length]);
   const send = useMutation({
     mutationFn: (message: string) => communityService.sendMessage(id, message),
     onSuccess: () => {
@@ -91,7 +100,7 @@ function Page() {
             </div>
           </header>
 
-          <div className="h-[48vh] min-h-80 space-y-4 overflow-y-auto p-4 sm:p-5">
+          <div ref={scrollRef} className="h-[48vh] min-h-80 space-y-4 overflow-y-auto p-4 sm:p-5">
             {(messages.data ?? []).map((message) => (
               <article
                 key={message.id}

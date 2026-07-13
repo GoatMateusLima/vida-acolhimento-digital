@@ -154,7 +154,8 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <div>
               <Logo />
               <p className="mt-4 text-sm text-muted-foreground leading-relaxed max-w-xs">
-                Plataforma de acolhimento e escuta emocional gratuita. Conectamos pessoas que precisam ser ouvidas a voluntários treinados com empatia.
+                Plataforma de acolhimento e escuta emocional gratuita. Conectamos pessoas que
+                precisam ser ouvidas a voluntários treinados com empatia.
               </p>
               <p className="mt-4 text-xs text-muted-foreground/50">
                 Não oferecemos diagnóstico médico ou acompanhamento terapêutico.
@@ -210,12 +211,11 @@ export function PublicLayout({ children }: { children: ReactNode }) {
           {/* Bottom bar */}
           <div className="mt-10 pt-6 border-t border-border/60 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <p className="text-xs text-muted-foreground/50">
-              © {new Date().getFullYear()} VIDA+. Feito com{" "}
-              <span className="text-primary">♥</span> por pessoas que se importam.
+              © {new Date().getFullYear()} VIDA+. Feito com <span className="text-primary">♥</span>{" "}
+              por pessoas que se importam.
             </p>
             <p className="text-xs text-muted-foreground/50">
-              Em emergência:{" "}
-              <strong className="text-muted-foreground">CVV 188</strong>
+              Em emergência: <strong className="text-muted-foreground">CVV 188</strong>
               {" · "}
               <strong className="text-muted-foreground">SAMU 192</strong>
             </p>

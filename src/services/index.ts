@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { http, setAccessToken } from "@/services/api/client";
+import { http, setAccessToken, setRefreshToken } from "@/services/api/client";
 import type {
   Application,
   AdminCommunity,
@@ -84,14 +84,16 @@ function mapUser(input: any, emailFallback = ""): User {
 }
 
 function mapVolunteer(input: any): Volunteer {
+  // backend retorna display_name direto no objeto (GET /admin/volunteers)
   const name = input.users?.display_name ?? input.display_name ?? "Voluntario";
   return {
     id: input.user_id ?? input.id,
     alias: name,
     initials: initialsFrom(name),
-    status: input.availability_status ?? "offline",
-    rating: 0,
-    totalSessions: input.total_chats ?? 0,
+    // backend retorna "status" em GET /admin/volunteers, "availability_status" em outros contextos
+    status: input.status ?? input.availability_status ?? "offline",
+    rating: input.rating ?? 0,
+    totalSessions: input.total_chats ?? input.totalSessions ?? 0,
     applicationStatus: "aprovado",
   };
 }
@@ -105,8 +107,10 @@ function mapConversationStatus(status?: string): Conversation["status"] {
 function mapConversation(input: any): Conversation {
   return {
     id: input.id,
+    // volunteer_display_name é o campo novo que o backend vai adicionar (gap #3)
+    // fallback: usa volunteer_id presente → "Voluntário" genérico
     userAlias: input.anonymous_name ?? "Pessoa acolhida",
-    volunteerAlias: input.volunteer_id ? "Voluntario" : undefined,
+    volunteerAlias: input.volunteer_display_name ?? (input.volunteer_id ? "Voluntário" : undefined),
     status: mapConversationStatus(input.status),
     startedAt: input.started_at ?? input.created_at ?? new Date().toISOString(),
     endedAt: input.ended_at,
@@ -118,11 +122,14 @@ function mapConversation(input: any): Conversation {
 
 function mapMessage(input: any): ChatMessage {
   const mine = input.sender_id && input.sender_id === getCurrentUserId();
+  // backend usa body_encrypted (já descriptografado pelo backend antes de enviar)
+  // type "system" ou sender_id nulo indica mensagem de sistema
+  const isSystem = input.type === "system" || input.sender_id == null;
   return {
     id: input.id,
     conversationId: input.conversation_id,
-    author: input.type === "system" ? "system" : mine ? "user" : "volunteer",
-    text: input.body ?? input.text ?? "",
+    author: isSystem ? "system" : mine ? "user" : "volunteer",
+    text: input.body_encrypted ?? input.body ?? input.text ?? "",
     createdAt: input.created_at ?? new Date().toISOString(),
     status: "sent",
   };
@@ -192,7 +199,8 @@ function mapCommunity(input: any): Community {
     topic: input.topic ?? input.name,
     memberCount: input.member_count ?? input.memberCount ?? 0,
     onlineCount: input.online_count ?? input.onlineCount ?? 0,
-    joined: Boolean(input.joined),
+    // backend retorna is_member (não joined)
+    joined: Boolean(input.joined ?? input.is_member),
     myAlias: input.my_alias ?? input.myAlias,
     rules: input.rules_json ?? input.rules ?? [],
   };
@@ -212,7 +220,8 @@ function mapCommunityMessage(input: any): CommunityMessage {
     id: input.id,
     communityId: input.community_id,
     alias: input.alias ?? input.alias_snapshot ?? "Participante",
-    text: input.body ?? input.text ?? "",
+    // aceita body_encrypted (consistência com chat) ou body/text
+    text: input.body_encrypted ?? input.body ?? input.text ?? "",
     createdAt: input.created_at ?? new Date().toISOString(),
     isMine: input.is_mine ?? input.isMine,
     reported: input.reported,
@@ -221,7 +230,9 @@ function mapCommunityMessage(input: any): CommunityMessage {
 
 async function loginWithSession(data: any, emailFallback = ""): Promise<User> {
   const token = data.session?.access_token;
+  const refreshToken = data.session?.refresh_token;
   setAccessToken(token ?? null);
+  setRefreshToken(refreshToken ?? null);
   const authUser = data.user ? mapUser(data.user, emailFallback) : null;
   saveCurrentUserId(authUser?.id);
   try {
@@ -279,7 +290,7 @@ export const userService = {
   },
   async list(): Promise<User[]> {
     const data = await apiData<any[]>("/users/admin");
-    return data.map(mapUser);
+    return data.map((u) => mapUser(u));
   },
   async updateRole(id: string, role: User["role"]): Promise<User> {
     const data = await apiData<any>(`/users/admin/${id}/role`, {
@@ -298,7 +309,13 @@ export const queueService = {
   },
   async join(): Promise<{ position: number; estimatedWait: number; conversationId: string }> {
     const data = await apiData<any>("/conversations", { method: "POST" });
-    return { position: 1, estimatedWait: 4, conversationId: data.id };
+    // position e estimated_wait_minutes são retornados quando backend implementar gap #2
+    // fallback: position=1, estimatedWait=4 enquanto o backend não os envia
+    return {
+      position: data.position ?? 1,
+      estimatedWait: data.estimated_wait_minutes ?? data.estimatedWait ?? 4,
+      conversationId: data.id,
+    };
   },
   async cancel(): Promise<{ ok: true }> {
     return { ok: true };
@@ -307,8 +324,10 @@ export const queueService = {
 
 export const chatService = {
   async getConversations(): Promise<Conversation[]> {
-    const data = await apiData<{ items: any[] }>("/conversations");
-    return data.items.map(mapConversation);
+    // backend retorna array direto em data (não { items: [] })
+    const data = await apiData<any>("/conversations");
+    const list: any[] = Array.isArray(data) ? data : (data.items ?? []);
+    return list.map(mapConversation);
   },
   async getConversation(id: string): Promise<Conversation> {
     const data = await apiData<any>(`/conversations/${id}`);
@@ -316,6 +335,7 @@ export const chatService = {
   },
   async getMessages(id: string): Promise<ChatMessage[]> {
     const data = await apiData<any>(`/conversations/${id}`);
+    // backend retorna mensagens dentro do objeto da conversa
     return (data.messages ?? []).map(mapMessage);
   },
   async sendMessage(
@@ -459,8 +479,10 @@ export const communityService = {
     return { ok: true };
   },
   async getMessages(id: string): Promise<CommunityMessage[]> {
-    const data = await apiData<{ items: any[] }>(`/communities/${id}/messages`);
-    return data.items.map(mapCommunityMessage);
+    // backend retorna array direto em data (não { items: [] })
+    const data = await apiData<any>(`/communities/${id}/messages`);
+    const list: any[] = Array.isArray(data) ? data : (data.items ?? []);
+    return list.map(mapCommunityMessage);
   },
   async sendMessage(id: string, text: string): Promise<CommunityMessage> {
     const data = await apiData<any>(`/communities/${id}/messages`, {
@@ -474,10 +496,12 @@ export const communityService = {
       method: "POST",
       body: JSON.stringify({ reason }),
     });
+    // backend gap #9: espera { message_id, alias, display_name, email }
+    // fallback: aceita { real_user_id, display_name } que é o que o backend documenta hoje
     return {
-      messageId: data.message_id,
-      alias: data.alias,
-      realName: data.display_name,
+      messageId: data.message_id ?? messageId,
+      alias: data.alias ?? data.alias_snapshot ?? "—",
+      realName: data.display_name ?? data.real_name ?? "",
       email: data.email ?? "",
       reason,
       revealedAt: new Date().toISOString(),
@@ -549,18 +573,55 @@ export const adminCommunityService = {
   },
 };
 
+// NOTIFICATIONS ---------------------------------------------------------
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  body: string;
+  readAt: string | null;
+  createdAt: string;
+}
+
+function mapNotification(input: any): Notification {
+  return {
+    id: input.id,
+    userId: input.user_id ?? input.userId ?? "",
+    title: input.title ?? "",
+    body: input.body ?? "",
+    readAt: input.read_at ?? input.readAt ?? null,
+    createdAt: input.created_at ?? input.createdAt ?? new Date().toISOString(),
+  };
+}
+
+export const notificationService = {
+  async list(): Promise<Notification[]> {
+    const data = await apiData<any>("/notifications");
+    const list: any[] = Array.isArray(data) ? data : (data.items ?? []);
+    return list.map(mapNotification);
+  },
+  async markRead(id: string): Promise<{ ok: true }> {
+    await apiData<unknown>(`/notifications/${id}/read`, { method: "PATCH" });
+    return { ok: true };
+  },
+};
+
 // METRICS ---------------------------------------------------------------
 export const metricsService = {
   async overview(): Promise<Metrics> {
+    // backend retorna { total, ativas, encerradas } + campos extras quando implementar gap #4
     const data = await apiData<any>("/conversations/volunteer/dashboard");
     return {
-      totalUsers: 0,
-      totalVolunteers: data.onlineVolunteers ?? 0,
-      activeConversations: data.activeChats ?? 0,
-      conversationsToday: data.activeChats ?? 0,
-      avgWaitMinutes: data.pendingChats ? 5 : 0,
-      satisfactionRate: 0,
-      weekly: [],
+      totalUsers: data.totalUsersAllTime ?? data.total_users ?? 0,
+      totalVolunteers: data.onlineVolunteers ?? data.online_volunteers ?? 0,
+      activeConversations: data.ativas ?? data.active_chats ?? data.activeChats ?? 0,
+      conversationsToday: data.total ?? data.ativas ?? 0,
+      avgWaitMinutes: (data.pendingChats ?? data.pending_chats) ? 5 : 0,
+      satisfactionRate: data.satisfactionRate ?? data.satisfaction_rate ?? 0,
+      weekly: (data.weeklyConversations ?? data.weekly_conversations ?? []).map((w: any) => ({
+        day: w.day,
+        conversations: w.conversations ?? w.count ?? 0,
+      })),
     };
   },
 };

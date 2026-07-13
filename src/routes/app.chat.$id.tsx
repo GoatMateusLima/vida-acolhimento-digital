@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { ChatMessage } from "@/types";
 import { toast } from "sonner";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useChatSSE } from "@/hooks/useChatSSE";
 
 export const Route = createFileRoute("/app/chat/$id")({
   head: () => ({ meta: [{ title: "Conversa — VIDA+" }] }),
@@ -33,10 +35,15 @@ function Page() {
   const [endOpen, setEndOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  useAuthGuard();
+
   const messages = useQuery({
     queryKey: ["messages", id],
     queryFn: () => chatService.getMessages(id),
   });
+
+  // SSE — recebe mensagens em tempo real do voluntário
+  useChatSSE(id);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -77,6 +84,15 @@ function Page() {
     },
   });
 
+  const endConversation = useMutation({
+    mutationFn: () => chatService.endConversation(id),
+    onSuccess: () => {
+      toast.success("Conversa encerrada.");
+      navigate({ to: "/app" });
+    },
+    onError: () => toast.error("Não foi possível encerrar. Tente novamente."),
+  });
+
   const handleSend = () => {
     const t = text.trim();
     if (!t) return;
@@ -90,7 +106,7 @@ function Page() {
         {/* Status bar */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-card px-4 py-3">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">Voluntário C.</p>
+            <p className="truncate text-sm font-semibold">Voluntário disponível</p>
             <p className="truncate text-xs text-muted-foreground">
               Conversa em andamento · confidencial
             </p>
@@ -102,7 +118,7 @@ function Page() {
               onClick={() => navigate({ to: "/app/denuncia" })}
               className="h-9 gap-1.5 text-destructive"
             >
-              <ShieldAlert className="h-4 w-4" />{" "}
+              <ShieldAlert className="h-4 w-4" />
               <span className="hidden sm:inline">Denunciar</span>
             </Button>
             <Button
@@ -184,12 +200,10 @@ function Page() {
           <AlertDialogFooter>
             <AlertDialogCancel>Continuar conversando</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                toast.success("Conversa encerrada.");
-                navigate({ to: "/app" });
-              }}
+              disabled={endConversation.isPending}
+              onClick={() => endConversation.mutate()}
             >
-              Encerrar
+              {endConversation.isPending ? "Encerrando…" : "Encerrar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

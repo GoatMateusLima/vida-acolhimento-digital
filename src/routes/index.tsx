@@ -101,7 +101,6 @@ function Landing() {
 
   return (
     <PublicLayout>
-
       {/* ═══════════════════════════════════════════
           HERO — Solar Clean
       ═══════════════════════════════════════════ */}
@@ -113,24 +112,30 @@ function Landing() {
         <div
           className="orb"
           style={{
-            width: "700px", height: "700px",
-            top: "-20%", left: "-15%",
+            width: "700px",
+            height: "700px",
+            top: "-20%",
+            left: "-15%",
             background: "radial-gradient(circle, oklch(0.78 0.17 82 / 0.18) 0%, transparent 70%)",
           }}
         />
         <div
           className="orb"
           style={{
-            width: "500px", height: "500px",
-            top: "5%", right: "-10%",
+            width: "500px",
+            height: "500px",
+            top: "5%",
+            right: "-10%",
             background: "radial-gradient(circle, oklch(0.72 0.14 42 / 0.14) 0%, transparent 70%)",
           }}
         />
         <div
           className="orb"
           style={{
-            width: "600px", height: "350px",
-            bottom: "-5%", left: "15%",
+            width: "600px",
+            height: "350px",
+            bottom: "-5%",
+            left: "15%",
             background: "radial-gradient(ellipse, oklch(0.78 0.17 82 / 0.10) 0%, transparent 70%)",
           }}
         />
@@ -160,8 +165,7 @@ function Landing() {
             transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
             className="font-display text-6xl font-bold tracking-tight text-balance text-foreground sm:text-7xl md:text-8xl lg:text-9xl leading-[0.92]"
           >
-            Você não está{" "}
-            <span className="gradient-text">sozinho.</span>
+            Você não está <span className="gradient-text">sozinho.</span>
           </motion.h1>
 
           <motion.p
@@ -170,8 +174,9 @@ function Landing() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="mt-8 mx-auto max-w-2xl text-lg text-muted-foreground leading-relaxed sm:text-xl"
           >
-            O <strong className="text-foreground">VIDA+</strong> conecta você a voluntários treinados
-            para uma conversa de escuta emocional anônima. Sem julgamentos, sem pressa, no seu próprio tempo.
+            O <strong className="text-foreground">VIDA+</strong> conecta você a voluntários
+            treinados para uma conversa de escuta emocional anônima. Sem julgamentos, sem pressa, no
+            seu próprio tempo.
           </motion.p>
 
           {/* CTAs */}
@@ -270,11 +275,11 @@ function Landing() {
           >
             <span className="pill mb-4 inline-flex">Como funciona</span>
             <h2 className="font-display text-4xl font-bold tracking-tight md:text-5xl text-foreground">
-              Um caminho simples para o{" "}
-              <span className="gradient-text">acolhimento</span>
+              Um caminho simples para o <span className="gradient-text">acolhimento</span>
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-lg text-muted-foreground">
-              Sabemos que pedir ajuda já exige muita energia. Por isso, simplificamos tudo para você.
+              Sabemos que pedir ajuda já exige muita energia. Por isso, simplificamos tudo para
+              você.
             </p>
           </motion.div>
 
@@ -342,8 +347,7 @@ function Landing() {
           >
             <span className="pill mb-4 inline-flex">Nossos pilares</span>
             <h2 className="font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-              Construído sobre{" "}
-              <span className="gradient-text">confiança</span>
+              Construído sobre <span className="gradient-text">confiança</span>
             </h2>
           </motion.div>
 
@@ -361,8 +365,10 @@ function Landing() {
                 className="group relative rounded-2xl p-8 bg-card border border-border/60
                            hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 cursor-default"
               >
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 mb-6
-                                group-hover:bg-primary group-hover:scale-110 transition-all duration-300">
+                <div
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 mb-6
+                                group-hover:bg-primary group-hover:scale-110 transition-all duration-300"
+                >
                   <p.icon className="h-6 w-6 text-primary group-hover:text-primary-foreground transition-colors duration-300" />
                 </div>
                 <h3 className="text-lg font-bold text-foreground mb-3">{p.title}</h3>
@@ -387,8 +393,7 @@ function Landing() {
             <div className="text-center mb-12">
               <span className="pill mb-4 inline-flex">Dúvidas frequentes</span>
               <h2 className="font-display text-4xl font-bold tracking-tight text-foreground">
-                Suas perguntas,{" "}
-                <span className="gradient-text">respondidas</span>
+                Suas perguntas, <span className="gradient-text">respondidas</span>
               </h2>
             </div>
 
@@ -429,10 +434,16 @@ function Landing() {
             <div
               className="orb"
               style={{
-                width: "400px", height: "300px",
-                top: "-40%", right: "-10%",
-                background: "radial-gradient(circle, oklch(0.78 0.17 82 / 0.25) 0%, transparent 70%)",
-                position: "absolute", filter: "blur(60px)", pointerEvents: "none", opacity: 0.7,
+                width: "400px",
+                height: "300px",
+                top: "-40%",
+                right: "-10%",
+                background:
+                  "radial-gradient(circle, oklch(0.78 0.17 82 / 0.25) 0%, transparent 70%)",
+                position: "absolute",
+                filter: "blur(60px)",
+                pointerEvents: "none",
+                opacity: 0.7,
               }}
             />
             <div className="relative z-10">
@@ -480,14 +491,17 @@ function Landing() {
                   Em situação de crise extrema?
                 </p>
                 <p className="mt-0.5 text-sm text-muted-foreground">
-                  Ligue agora para o{" "}
-                  <strong className="text-foreground">CVV 188</strong> (24h),{" "}
+                  Ligue agora para o <strong className="text-foreground">CVV 188</strong> (24h),{" "}
                   <strong className="text-foreground">SAMU 192</strong> ou vá ao pronto-socorro.
                 </p>
               </div>
             </div>
             <Link to="/seguranca" className="shrink-0">
-              <Button variant="outline" size="sm" className="rounded-full border-destructive/30 text-destructive hover:bg-destructive/8">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full border-destructive/30 text-destructive hover:bg-destructive/8"
+              >
                 Recursos de segurança
               </Button>
             </Link>
@@ -502,9 +516,7 @@ function Landing() {
 
 function ChatMockup() {
   return (
-    <div
-      className="relative rounded-3xl overflow-hidden border border-border/60 bg-card shadow-soft"
-    >
+    <div className="relative rounded-3xl overflow-hidden border border-border/60 bg-card shadow-soft">
       {/* Header */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-border/60">
         <div className="relative">
@@ -540,10 +552,10 @@ function ChatMockup() {
       {/* Input */}
       <div className="px-5 pb-5">
         <div className="flex items-center gap-3 rounded-2xl px-4 py-3 border border-border bg-muted/30">
-          <span className="flex-1 text-sm text-muted-foreground/50">Escreva o que está sentindo...</span>
-          <span
-            className="rounded-xl px-4 py-2 text-xs font-semibold text-primary-foreground bg-primary"
-          >
+          <span className="flex-1 text-sm text-muted-foreground/50">
+            Escreva o que está sentindo...
+          </span>
+          <span className="rounded-xl px-4 py-2 text-xs font-semibold text-primary-foreground bg-primary">
             Enviar
           </span>
         </div>

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { reportService } from "@/services";
 import { Field } from "./login";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/app/denuncia")({
   head: () => ({ meta: [{ title: "Denunciar — VIDA+" }] }),
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/app/denuncia")({
 const REASONS = ["Conduta inadequada", "Linguagem agressiva", "Assédio", "Spam", "Outro"];
 
 function Page() {
+  useAuthGuard();
   const navigate = useNavigate();
   const {
     register,
@@ -45,6 +47,7 @@ function Page() {
       toast.success("Denúncia registrada. Obrigado por nos ajudar.");
       navigate({ to: "/app" });
     },
+    onError: () => toast.error("Não foi possível registrar a denúncia. Tente novamente."),
   });
 
   return (

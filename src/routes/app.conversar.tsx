@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Clock, Heart, X } from "lucide-react";
 import { AppShell } from "@/layouts/AppShell";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
-import { queueService } from "@/services";
+import { chatService, queueService } from "@/services";
 import { toast } from "sonner";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/app/conversar")({
   head: () => ({ meta: [{ title: "Conversar agora — VIDA+" }] }),
@@ -22,6 +23,8 @@ function Page() {
   const [eta, setEta] = useState(4);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
+  useAuthGuard();
+
   const join = useMutation({
     mutationFn: queueService.join,
     onSuccess: (d) => {
@@ -30,17 +33,28 @@ function Page() {
       setConversationId(d.conversationId);
       setStep("waiting");
     },
+    onError: () => toast.error("Não foi possível entrar na fila. Tente novamente."),
   });
 
-  // Simula aparecimento de voluntário após 5s
+  // Polling: verifica a cada 5s se um voluntário aceitou (status → "active")
+  const poll = useQuery({
+    queryKey: ["conversation-status", conversationId],
+    queryFn: () => chatService.getConversation(conversationId!),
+    enabled: step === "waiting" && !!conversationId,
+    refetchInterval: 5000,
+  });
+
+  useEffect(() => {
+    if (poll.data?.status === "active") {
+      setStep("found");
+    }
+  }, [poll.data?.status]);
+
+  // Fallback de posição decrescente enquanto espera
   useEffect(() => {
     if (step !== "waiting") return;
-    const t1 = setTimeout(() => setPos((p) => Math.max(1, p - 1)), 1500);
-    const t2 = setTimeout(() => setStep("found"), 5000);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    const t = setInterval(() => setPos((p) => Math.max(1, p - 1)), 15000);
+    return () => clearInterval(t);
   }, [step]);
 
   return (
@@ -102,7 +116,9 @@ function Page() {
           </div>
           <h2 className="mt-5 font-display text-2xl font-semibold">Voluntário encontrado 💚</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Voluntário C. está pronto para te escutar.
+            {poll.data?.volunteerAlias
+              ? `${poll.data.volunteerAlias} está pronto para te escutar.`
+              : "Um voluntário está pronto para te escutar."}
           </p>
           <Button
             onClick={() => navigate({ to: "/app/chat/$id", params: { id: conversationId ?? "" } })}

@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { communityService } from "@/services";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/app/comunidades/")({
   head: () => ({ meta: [{ title: "Grupos de apoio — VIDA+" }] }),
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/app/comunidades/")({
 });
 
 function Page() {
+  useAuthGuard();
   const queryClient = useQueryClient();
   const groups = useQuery({ queryKey: ["communities"], queryFn: communityService.list });
   const join = useMutation({

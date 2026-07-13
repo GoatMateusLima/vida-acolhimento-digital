@@ -10,6 +10,7 @@ import { signupSchema, type SignupInput } from "@/utils/validators";
 import { authService } from "@/services";
 import { useProfile } from "@/contexts/ProfileContext";
 import { AuthShell, Field } from "./login";
+import { roleHome } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/cadastro")({
   head: () => ({ meta: [{ title: "Criar conta — VIDA+" }] }),
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/cadastro")({
 
 function Page() {
   const navigate = useNavigate();
-  const { setAuthenticated, setRole } = useProfile();
+  const { setAuthenticated, setRole, setCurrentUser } = useProfile();
   const {
     register,
     handleSubmit,
@@ -36,10 +37,11 @@ function Page() {
     onSuccess: (user) => {
       setRole(user.role);
       setAuthenticated(true);
+      setCurrentUser(user);
       toast.success("Conta criada com sucesso!");
-      navigate({ to: "/app" });
+      navigate({ to: roleHome(user.role) });
     },
-    onError: () => toast.error("Não foi possível criar sua conta."),
+    onError: () => toast.error("Não foi possível criar sua conta. Tente novamente."),
   });
 
   return (

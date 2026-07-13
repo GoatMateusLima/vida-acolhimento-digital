@@ -4,6 +4,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { metricsService } from "@/services";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Dashboard — VIDA+" }] }),
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function Page() {
+  useAuthGuard();
   const q = useQuery({ queryKey: ["metrics"], queryFn: metricsService.overview });
   const m = q.data;
 

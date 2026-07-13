@@ -7,6 +7,7 @@ import { chatService } from "@/services";
 import { fmtDateTime } from "@/utils/format";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { EmptyState } from "@/components/common/EmptyState";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/app/historico")({
   head: () => ({ meta: [{ title: "Histórico — VIDA+" }] }),
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/app/historico")({
 });
 
 function Page() {
+  useAuthGuard();
   const q = useQuery({ queryKey: ["conversations"], queryFn: chatService.getConversations });
   const list = q.data ?? [];
 

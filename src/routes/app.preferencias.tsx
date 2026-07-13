@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/app/preferencias")({
   head: () => ({ meta: [{ title: "Preferências — VIDA+" }] }),
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/app/preferencias")({
 });
 
 function Page() {
+  useAuthGuard();
   const { theme, toggle } = useTheme();
   const [notif, setNotif] = useState(true);
   const [reduce, setReduce] = useState(false);

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,10 +8,11 @@ import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { userService } from "@/services";
+import { http } from "@/services/api/client";
 import { profileSchema } from "@/utils/validators";
 import { Field } from "./login";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 type V = z.infer<typeof profileSchema>;
 
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/app/perfil")({
 });
 
 function Page() {
+  useAuthGuard();
   const me = useQuery({ queryKey: ["me"], queryFn: userService.me });
   const {
     register,
@@ -31,20 +33,29 @@ function Page() {
     values: me.data ? { name: me.data.name, email: me.data.email } : undefined,
   });
 
+  const update = useMutation({
+    mutationFn: (v: V) =>
+      http("/users/me/preferences", {
+        method: "PATCH",
+        body: JSON.stringify({ nickname: v.name }),
+      }),
+    onSuccess: () => toast.success("Perfil atualizado."),
+    onError: () => toast.error("Não foi possível atualizar o perfil."),
+  });
+
   return (
     <AppShell>
       <PageHeader title="Perfil" description="Seus dados básicos." />
-      <form
-        onSubmit={handleSubmit(() => toast.success("Perfil atualizado."))}
-        className="max-w-md space-y-4"
-      >
+      <form onSubmit={handleSubmit((v) => update.mutate(v))} className="max-w-md space-y-4">
         <Field label="Nome" id="name" error={errors.name?.message}>
           <Input id="name" {...register("name")} />
         </Field>
         <Field label="E-mail" id="email" error={errors.email?.message}>
-          <Input id="email" type="email" {...register("email")} />
+          <Input id="email" type="email" {...register("email")} disabled />
         </Field>
-        <Button type="submit">Salvar</Button>
+        <Button type="submit" disabled={update.isPending}>
+          {update.isPending ? "Salvando…" : "Salvar"}
+        </Button>
       </form>
     </AppShell>
   );

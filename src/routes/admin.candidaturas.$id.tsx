@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/admin/candidaturas/$id")({
   head: () => ({ meta: [{ title: "Detalhes da candidatura — VIDA+" }] }),
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/admin/candidaturas/$id")({
 });
 
 function Page() {
+  useAuthGuard();
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const q = useQuery({ queryKey: ["application", id], queryFn: () => applicationService.get(id) });

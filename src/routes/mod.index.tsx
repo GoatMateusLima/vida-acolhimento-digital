@@ -15,6 +15,7 @@ import {
 import { reportService } from "@/services";
 import { fmtRelative } from "@/utils/format";
 import type { ReportStatus } from "@/types";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/mod/")({
   head: () => ({ meta: [{ title: "Moderação — VIDA+" }] }),
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/mod/")({
 });
 
 function Page() {
+  useAuthGuard();
   const q = useQuery({ queryKey: ["reports"], queryFn: reportService.list });
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<ReportStatus | "todos">("todos");

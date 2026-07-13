@@ -8,6 +8,7 @@ import { chatService, userService } from "@/services";
 import { fmtDate, fmtRelative } from "@/utils/format";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/app/")({
   head: () => ({ meta: [{ title: "Início — VIDA+" }] }),
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/app/")({
 });
 
 function Page() {
+  useAuthGuard();
   const me = useQuery({ queryKey: ["me"], queryFn: userService.me });
   const conv = useQuery({ queryKey: ["conversations"], queryFn: chatService.getConversations });
 

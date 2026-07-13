@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { adminCommunityService } from "@/services";
 import type { AdminCommunityStatus } from "@/types";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/admin/comunidades/")({
   head: () => ({ meta: [{ title: "Gestão de grupos — VIDA+" }] }),
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/admin/comunidades/")({
 });
 
 function Page() {
+  useAuthGuard();
   const queryClient = useQueryClient();
   const groups = useQuery({ queryKey: ["admin-communities"], queryFn: adminCommunityService.list });
   const [showCreate, setShowCreate] = useState(false);

@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/common/PageHeader";
 import { adminCommunityService } from "@/services";
 import { fmtDateTime, fmtRelative } from "@/utils/format";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/admin/comunidades/$id")({
   head: () => ({ meta: [{ title: "Controle do grupo — VIDA+" }] }),
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/admin/comunidades/$id")({
 });
 
 function Page() {
+  useAuthGuard();
   const { id } = Route.useParams();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);

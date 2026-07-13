@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Home,
   MessageCircle,
@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import type { ProfileRole } from "@/types";
+import { clearSession, http } from "@/services/api/client";
 
 type Item = { to: string; label: string; icon: typeof Home };
 
@@ -52,8 +53,21 @@ const NAV: Record<ProfileRole, Item[]> = {
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { role, setAuthenticated } = useProfile();
+  const { role, setAuthenticated, setCurrentUser } = useProfile();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    try {
+      await http("/auth/logout", { method: "POST" });
+    } catch {
+      // ignora erro de rede — limpa sessão mesmo assim
+    }
+    clearSession();
+    setAuthenticated(false);
+    setCurrentUser(null);
+    navigate({ to: "/login", replace: true });
+  }
   const routeRole: ProfileRole = pathname.startsWith("/vol")
     ? "voluntario"
     : pathname.startsWith("/mod")
@@ -89,11 +103,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </nav>
         <div className="border-t p-3">
-          <Link to="/login" onClick={() => setAuthenticated(false)}>
-            <Button variant="ghost" className="w-full justify-start gap-2">
-              <LogOut className="h-4 w-4" /> Sair
-            </Button>
-          </Link>
+          <Button variant="ghost" className="w-full justify-start gap-2" onClick={handleLogout}>
+            <LogOut className="h-4 w-4" /> Sair
+          </Button>
         </div>
       </aside>
 
@@ -164,16 +176,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                         <div className="mt-1" onClick={() => setMoreOpen(false)}>
                           <InstallButton fullWidth />
                         </div>
-                        <Link
-                          to="/login"
+                        <button
                           onClick={() => {
-                            setAuthenticated(false);
+                            handleLogout();
                             setMoreOpen(false);
                           }}
-                          className="mt-2 flex h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium text-destructive hover:bg-destructive/10"
+                          className="mt-2 flex h-12 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium text-destructive hover:bg-destructive/10"
                         >
                           <LogOut className="h-5 w-5" /> Sair
-                        </Link>
+                        </button>
                       </div>
                     </SheetContent>
                   </Sheet>

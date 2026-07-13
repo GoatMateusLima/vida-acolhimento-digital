@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { userService } from "@/services";
@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { ProfileRole } from "@/types";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/admin/usuarios")({
   head: () => ({ meta: [{ title: "Usuários — VIDA+" }] }),
@@ -22,11 +23,17 @@ export const Route = createFileRoute("/admin/usuarios")({
 const ROLES: ProfileRole[] = ["usuario", "voluntario", "moderador", "administrador"];
 
 function Page() {
+  useAuthGuard();
+  const qc = useQueryClient();
   const q = useQuery({ queryKey: ["users"], queryFn: userService.list });
   const m = useMutation({
     mutationFn: ({ id, role }: { id: string; role: ProfileRole }) =>
       userService.updateRole(id, role),
-    onSuccess: () => toast.success("Papel atualizado."),
+    onSuccess: () => {
+      toast.success("Papel atualizado.");
+      qc.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: () => toast.error("Não foi possível atualizar o papel."),
   });
 
   return (

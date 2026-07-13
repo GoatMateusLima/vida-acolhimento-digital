@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import type { ReportStatus } from "@/types";
 import { Eye, ShieldAlert } from "lucide-react";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export const Route = createFileRoute("/mod/$id")({
   head: () => ({ meta: [{ title: "Detalhes da denúncia — VIDA+" }] }),
@@ -37,6 +38,9 @@ function Page() {
     realName: string;
     email: string;
   } | null>(null);
+
+  useAuthGuard();
+
   const q = useQuery({ queryKey: ["report", id], queryFn: () => reportService.get(id) });
   const m = useMutation({
     mutationFn: (s: ReportStatus) => reportService.setStatus(id, s, note),
@@ -45,14 +49,26 @@ function Page() {
       navigate({ to: "/mod" });
     },
   });
+
+  // revealIdentity usa o reportedAlias (target_id) do relatório como messageId
   const reveal = useMutation({
-    mutationFn: () => communityService.revealIdentity("gm4", identityReason),
+    mutationFn: () => {
+      const messageId = q.data?.reportedAlias ?? id;
+      return communityService.revealIdentity(messageId, identityReason);
+    },
     onSuccess: (identity) => {
       setRevealedIdentity(identity);
       toast.warning("Identidade consultada. Este acesso foi registrado.");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) => toast.error((error as Error).message),
   });
+
+  // Exibe o painel de revelar identidade apenas para denúncias do tipo mensagem
+  // (quando o target é um alias de comunidade, não um UUID de usuário)
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    q.data?.reportedAlias ?? "",
+  );
+  const canReveal = !!q.data && !isUuid;
 
   if (q.isPending)
     return (
@@ -108,7 +124,7 @@ function Page() {
             />
           </section>
 
-          {r.id === "r2" && (
+          {canReveal && (
             <section className="rounded-2xl border border-amber-300/60 bg-amber-50/60 p-5 dark:bg-amber-950/20">
               <div className="flex gap-3">
                 <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-400" />

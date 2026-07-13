@@ -18,6 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useChatSSE } from "@/hooks/useChatSSE";
+import { http } from "@/services/api/client";
 
 export const Route = createFileRoute("/vol/chat/$id")({
   head: () => ({ meta: [{ title: "Atendimento — VIDA+" }] }),
@@ -34,10 +37,21 @@ function Page() {
   const [riskLevel, setRiskLevel] = useState("baixo");
   const [riskReason, setRiskReason] = useState("");
   const [ended, setEnded] = useState(false);
+
+  useAuthGuard();
+
   const messages = useQuery({
     queryKey: ["messages", id],
     queryFn: () => chatService.getMessages(id),
   });
+
+  // SSE — recebe mensagens em tempo real do usuário acolhido
+  useChatSSE(id);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages.data?.length]);
+
   const send = useMutation({
     mutationFn: (value: string) => chatService.sendMessage(id, value, "volunteer"),
     onSuccess: (message) => {
@@ -47,9 +61,27 @@ function Page() {
     onError: () => toast.error("Não foi possível enviar a mensagem."),
   });
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages.data?.length]);
+  const flagRisk = useMutation({
+    mutationFn: () =>
+      http(`/conversations/${id}/risk-flags`, {
+        method: "POST",
+        body: JSON.stringify({ level: riskLevel, reason: riskReason }),
+      }),
+    onSuccess: () => {
+      toast.warning(`Risco ${riskLevel} registrado. Equipe notificada.`);
+      setRiskReason("");
+    },
+    onError: () => toast.error("Não foi possível registrar a sinalização."),
+  });
+
+  const endConversation = useMutation({
+    mutationFn: () => chatService.endConversation(id),
+    onSuccess: () => {
+      toast.success("Atendimento encerrado.");
+      setEnded(true);
+    },
+    onError: () => toast.error("Não foi possível encerrar o atendimento."),
+  });
 
   return (
     <AppShell>
@@ -71,6 +103,7 @@ function Page() {
                 </p>
               </div>
             </div>
+
             <div
               ref={scrollRef}
               className="flex-1 overflow-y-auto bg-background/40 px-4 py-5"
@@ -87,6 +120,7 @@ function Page() {
                 )}
               </div>
             </div>
+
             <form
               className="border-t bg-card p-3"
               onSubmit={(event) => {
@@ -126,6 +160,7 @@ function Page() {
               </div>
             </form>
           </div>
+
           <aside className="h-fit rounded-2xl border bg-card p-5 shadow-soft lg:sticky lg:top-24">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
               <AlertTriangle className="h-4 w-4 text-warning" /> Sinalizar risco
@@ -155,22 +190,21 @@ function Page() {
               variant="outline"
               size="sm"
               className="mt-3 w-full"
-              disabled={riskReason.trim().length < 5}
-              onClick={() => {
-                toast.warning(`Risco ${riskLevel} registrado. Equipe notificada.`);
-                setRiskReason("");
-              }}
+              disabled={riskReason.trim().length < 5 || flagRisk.isPending}
+              onClick={() => flagRisk.mutate()}
             >
-              Registrar sinalização
+              {flagRisk.isPending ? "Registrando…" : "Registrar sinalização"}
             </Button>
+
             <div className="mt-6 border-t pt-4">
               <Button
                 variant="destructive"
                 size="sm"
                 className="w-full"
-                onClick={() => setEnded(true)}
+                disabled={endConversation.isPending}
+                onClick={() => endConversation.mutate()}
               >
-                Encerrar atendimento
+                {endConversation.isPending ? "Encerrando…" : "Encerrar atendimento"}
               </Button>
             </div>
           </aside>
