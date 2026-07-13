@@ -16,18 +16,11 @@ import type { ProfileRole } from "@/types";
  *   /admin → administrador
  */
 
-const ROLE_ORDER: Record<ProfileRole, number> = {
-  usuario: 1,
-  voluntario: 2,
-  moderador: 3,
-  administrador: 4,
-};
-
-const PREFIX_MIN_ROLE: Array<{ prefix: string; minRole: ProfileRole }> = [
-  { prefix: "/admin", minRole: "administrador" },
-  { prefix: "/mod", minRole: "moderador" },
-  { prefix: "/vol", minRole: "voluntario" },
-  { prefix: "/app", minRole: "usuario" },
+const PREFIX_ROLE: Array<{ prefix: string; role: ProfileRole }> = [
+  { prefix: "/admin", role: "administrador" },
+  { prefix: "/mod", role: "moderador" },
+  { prefix: "/vol", role: "voluntario" },
+  { prefix: "/app", role: "usuario" },
 ];
 
 export function useAuthGuard() {
@@ -41,13 +34,11 @@ export function useAuthGuard() {
       return;
     }
 
-    const match = PREFIX_MIN_ROLE.find((p) => pathname.startsWith(p.prefix));
+    if (pathname === "/app/preferencias") return;
+    const match = PREFIX_ROLE.find((p) => pathname.startsWith(p.prefix));
     if (!match) return;
 
-    const userLevel = ROLE_ORDER[role] ?? 0;
-    const requiredLevel = ROLE_ORDER[match.minRole] ?? 0;
-
-    if (userLevel < requiredLevel) {
+    if (role !== match.role) {
       // Redireciona para a área correta da role atual
       const home = roleHome(role);
       navigate({ to: home, replace: true });

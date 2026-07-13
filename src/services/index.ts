@@ -183,7 +183,8 @@ function mapReport(input: any): Report {
   return {
     id: input.id,
     reporterAlias: input.reporterAlias ?? "Pessoa denunciante",
-    reportedAlias: input.target_id ?? input.reportedAlias ?? "Alvo informado",
+    reportedAlias:
+      input.reported_alias ?? input.target_id ?? input.reportedAlias ?? "Alvo informado",
     reason: input.reason ?? "",
     details: input.description ?? input.details ?? "",
     status: input.status ?? "pendente",
@@ -422,6 +423,36 @@ export const applicationService = {
   },
 };
 
+export const moderatorApplicationService = {
+  async getMine(): Promise<Application> {
+    const data = await apiData<any>("/admin/moderators/applications/me");
+    return mapApplication(data);
+  },
+  async list(): Promise<Application[]> {
+    const data = await apiData<any[]>("/admin/moderators/applications");
+    return data.map(mapApplication);
+  },
+  async get(id: string): Promise<Application> {
+    const data = await apiData<any>(`/admin/moderators/applications/${id}`);
+    return mapApplication(data);
+  },
+  async submit(data: { motivation: string; experience: string }): Promise<Application> {
+    const response = await apiData<any>("/admin/moderators/apply", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    return mapApplication(response);
+  },
+  async setStatus(id: string, approved: boolean): Promise<void> {
+    await apiData<unknown>(`/admin/moderators/${id}/${approved ? "approve" : "reject"}`, {
+      method: "POST",
+      body: approved
+        ? undefined
+        : JSON.stringify({ decision: "Candidatura recusada pelo administrador." }),
+    });
+  },
+};
+
 // REPORTS / MODERATION --------------------------------------------------
 
 // Cache local de denúncias enviadas — persiste enquanto o backend não tem GET /reports/my
@@ -508,6 +539,18 @@ export const reportService = {
     // salva localmente para garantir que o usuário veja mesmo sem GET /reports/my
     saveLocalReport(report);
     return report;
+  },
+  async createFromMessage(messageId: string, reportedAlias: string): Promise<Report> {
+    const response = await apiData<any>("/reports", {
+      method: "POST",
+      body: JSON.stringify({
+        targetType: "mensagem",
+        targetId: messageId,
+        reason: "Mensagem inadequada no grupo",
+        description: `Mensagem publicada por ${reportedAlias} denunciada diretamente no grupo.`,
+      }),
+    });
+    return mapReport({ ...response, reported_alias: reportedAlias });
   },
   async setStatus(id: string, status: ReportStatus, note: string): Promise<{ ok: true }> {
     await apiData<unknown>(`/reports/admin/reports/${id}`, {

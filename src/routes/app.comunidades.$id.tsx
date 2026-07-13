@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/layouts/AppShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { communityService } from "@/services";
+import { communityService, reportService } from "@/services";
 import { fmtRelative } from "@/utils/format";
 import { cn } from "@/lib/utils";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
@@ -49,6 +49,12 @@ function Page() {
       toast("Você saiu do grupo.");
       navigate({ to: "/app/comunidades" });
     },
+  });
+  const reportMessage = useMutation({
+    mutationFn: ({ messageId, alias }: { messageId: string; alias: string }) =>
+      reportService.createFromMessage(messageId, alias),
+    onSuccess: () => toast.success("Mensagem denunciada. A moderação fará a análise."),
+    onError: (error) => toast.error(error.message),
   });
 
   const submit = (event: FormEvent) => {
@@ -123,12 +129,18 @@ function Page() {
                   {message.text}
                 </div>
                 {!message.isMine && (
-                  <Link
-                    to="/app/denuncia"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("Denunciar esta mensagem para a moderação?")) {
+                        reportMessage.mutate({ messageId: message.id, alias: message.alias });
+                      }
+                    }}
+                    disabled={reportMessage.isPending}
                     className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
                   >
                     <Flag className="h-3 w-3" /> Denunciar
-                  </Link>
+                  </button>
                 )}
               </article>
             ))}
