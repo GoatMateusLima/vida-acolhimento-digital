@@ -73,9 +73,11 @@ function mapUser(input: any, emailFallback = ""): User {
     input?.email ??
     "Pessoa VIDA+";
   const id = input?.id ?? input?.user_id ?? "me";
+  const nickname = input?.profile?.nickname ?? input?.nickname ?? name;
   return {
     id,
     name,
+    nickname,
     initials: initialsFrom(name),
     email: input?.email ?? emailFallback,
     role: mapRole(input?.role ?? input?.app_metadata?.role),
@@ -255,21 +257,23 @@ export const authService = {
     });
     return loginWithSession(data, email);
   },
-  async signup(data: { name: string; email: string; password: string }): Promise<User> {
+  async signup(data: {
+    name: string;
+    nickname: string;
+    email: string;
+    password: string;
+  }): Promise<User> {
     const registered = await apiData<any>("/auth/register", {
       method: "POST",
       body: JSON.stringify({
         displayName: data.name,
+        nickname: data.nickname,
         email: data.email,
         password: data.password,
       }),
     });
     if (registered.session?.access_token) return loginWithSession(registered, data.email);
     return authService.login(data.email, data.password);
-  },
-  async continueAnonymously(): Promise<User> {
-    const data = await apiData<any>("/auth/anonymous", { method: "POST" });
-    return loginWithSession(data);
   },
   async recover(email: string): Promise<{ ok: true }> {
     await apiData<unknown>("/auth/password/reset", {

@@ -3,6 +3,7 @@ export type ProfileRole = "usuario" | "voluntario" | "moderador" | "administrado
 export interface User {
   id: string;
   name: string;
+  nickname: string;
   initials: string;
   email: string;
   role: ProfileRole;

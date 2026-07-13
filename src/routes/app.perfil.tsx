@@ -30,7 +30,7 @@ function Page() {
     formState: { errors },
   } = useForm<V>({
     resolver: zodResolver(profileSchema),
-    values: me.data ? { name: me.data.name, email: me.data.email } : undefined,
+    values: me.data ? { name: me.data.nickname, email: me.data.email } : undefined,
   });
 
   const update = useMutation({
@@ -47,8 +47,11 @@ function Page() {
     <AppShell>
       <PageHeader title="Perfil" description="Seus dados básicos." />
       <form onSubmit={handleSubmit((v) => update.mutate(v))} className="max-w-md space-y-4">
-        <Field label="Nome" id="name" error={errors.name?.message}>
+        <Field label="Apelido público" id="name" error={errors.name?.message}>
           <Input id="name" {...register("name")} />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Este apelido será exibido nos grupos. Seu nome completo permanece privado.
+          </p>
         </Field>
         <Field label="E-mail" id="email" error={errors.email?.message}>
           <Input id="email" type="email" {...register("email")} disabled />

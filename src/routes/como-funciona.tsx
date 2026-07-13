@@ -26,7 +26,7 @@ function Page() {
         <div className="mt-10 space-y-6">
           {[
             {
-              t: "1. Cadastro anônimo",
+              t: "1. Crie sua conta",
               d: "Crie uma conta com poucos dados. Você não precisa expor sua identidade.",
             },
             {

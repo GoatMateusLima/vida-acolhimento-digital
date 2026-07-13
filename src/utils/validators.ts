@@ -7,7 +7,8 @@ export const loginSchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>;
 
 export const signupSchema = z.object({
-  name: z.string().min(2, "Informe seu nome"),
+  name: z.string().trim().min(2, "Informe seu nome completo").max(100),
+  nickname: z.string().trim().min(2, "Informe seu apelido").max(50),
   email: z.string().email("E-mail invalido"),
   password: z
     .string()

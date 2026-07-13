@@ -28,7 +28,13 @@ function Page() {
     formState: { errors },
   } = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { name: "", email: "", password: "", accept: false as unknown as true },
+    defaultValues: {
+      name: "",
+      nickname: "",
+      email: "",
+      password: "",
+      accept: false as unknown as true,
+    },
   });
   const accept = watch("accept");
 
@@ -50,8 +56,17 @@ function Page() {
       <p className="mt-2 text-sm text-muted-foreground">Leva menos de um minuto.</p>
 
       <form onSubmit={handleSubmit((v) => m.mutate(v))} className="mt-8 space-y-4" noValidate>
-        <Field label="Como prefere ser chamado(a)?" id="name" error={errors.name?.message}>
-          <Input id="name" autoComplete="nickname" {...register("name")} />
+        <Field label="Nome completo" id="name" error={errors.name?.message}>
+          <Input id="name" autoComplete="name" {...register("name")} />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Dado privado, acessível somente à equipe autorizada.
+          </p>
+        </Field>
+        <Field label="Apelido público" id="nickname" error={errors.nickname?.message}>
+          <Input id="nickname" autoComplete="nickname" {...register("nickname")} />
+          <p className="mt-1 text-xs text-muted-foreground">
+            É este nome que as outras pessoas verão nos grupos.
+          </p>
         </Field>
         <Field label="E-mail" id="email" error={errors.email?.message}>
           <Input

@@ -48,7 +48,7 @@ function Page() {
           <UsersRound className="h-7 w-7 text-primary" />
           <h2 className="mt-4 font-display text-2xl font-semibold">Grupos de apoio</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Converse em comunidade usando um apelido anônimo.
+            Converse em comunidade usando seu apelido público.
           </p>
           <span className="mt-4 inline-block text-sm font-medium text-primary underline-offset-4 group-hover:underline">
             Ver grupos →

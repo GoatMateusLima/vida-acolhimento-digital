@@ -32,7 +32,7 @@ function Page() {
     <AppShell>
       <PageHeader
         title="Grupos de apoio"
-        description="Converse com outras pessoas usando um apelido exclusivo em cada grupo."
+        description="Converse com outras pessoas usando o apelido escolhido no seu cadastro."
       />
 
       <section className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4">
