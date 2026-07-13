@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useProfile } from "@/contexts/ProfileContext";
 import type { ProfileRole } from "@/types";
+import { clearSession, getAccessToken } from "@/services/api/client";
 
 /**
  * Redireciona o usuário se não estiver autenticado ou se a role não bater
@@ -29,7 +30,8 @@ export function useAuthGuard() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !getAccessToken()) {
+      clearSession();
       navigate({ to: "/login", replace: true });
       return;
     }
