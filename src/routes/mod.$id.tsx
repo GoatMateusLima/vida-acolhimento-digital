@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -41,13 +41,23 @@ function Page() {
 
   useAuthGuard();
 
-  const q = useQuery({ queryKey: ["report", id], queryFn: () => reportService.get(id) });
+  const q = useQuery({
+    queryKey: ["report", id],
+    queryFn: () => reportService.get(id),
+    // refetch ao focar janela para pegar status mais recente
+    refetchOnWindowFocus: true,
+  });
+  const qc = useQueryClient();
   const m = useMutation({
     mutationFn: (s: ReportStatus) => reportService.setStatus(id, s, note),
     onSuccess: () => {
       toast.success("Decisão registrada.");
+      // invalida lista e detalhe para refletir novo status
+      qc.invalidateQueries({ queryKey: ["reports"] });
+      qc.invalidateQueries({ queryKey: ["report", id] });
       navigate({ to: "/mod" });
     },
+    onError: () => toast.error("Não foi possível registrar a decisão. Tente novamente."),
   });
 
   // revealIdentity usa o reportedAlias (target_id) do relatório como messageId

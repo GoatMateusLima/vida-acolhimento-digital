@@ -415,6 +415,39 @@ export const applicationService = {
 };
 
 // REPORTS / MODERATION --------------------------------------------------
+
+// Cache local de denúncias enviadas — persiste enquanto o backend não tem GET /reports/my
+const MY_REPORTS_KEY = "vida:my-reports";
+
+function loadLocalReports(): Report[] {
+  try {
+    const raw = typeof window !== "undefined" ? window.localStorage.getItem(MY_REPORTS_KEY) : null;
+    return raw ? (JSON.parse(raw) as Report[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalReport(report: Report) {
+  if (typeof window === "undefined") return;
+  const existing = loadLocalReports();
+  // evita duplicata pelo id
+  const updated = [report, ...existing.filter((r) => r.id !== report.id)];
+  // mantém máximo de 50 denúncias locais
+  window.localStorage.setItem(MY_REPORTS_KEY, JSON.stringify(updated.slice(0, 50)));
+}
+
+function mergeReports(local: Report[], remote: Report[]): Report[] {
+  if (remote.length === 0) return local;
+  // quando o backend responder, preferir dados remotos (mais atualizados)
+  // mas manter locais que ainda não aparecem no backend
+  const remoteIds = new Set(remote.map((r) => r.id));
+  const onlyLocal = local.filter((r) => !remoteIds.has(r.id));
+  return [...remote, ...onlyLocal].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+}
+
 export const reportService = {
   async list(): Promise<Report[]> {
     const data = await apiData<any[]>("/reports/admin/reports");
@@ -424,11 +457,21 @@ export const reportService = {
     const data = await apiData<any>(`/reports/admin/reports/${id}`);
     return mapReport(data);
   },
-  /** Denúncias feitas pelo usuário logado */
+  /** Denúncias feitas pelo usuário logado.
+   * Tenta buscar do backend (GET /reports/my) e mescla com cache local.
+   * Se o backend ainda não tem o endpoint, retorna apenas o cache local.
+   */
   async listMine(): Promise<Report[]> {
-    const data = await apiData<any>("/reports/my");
-    const list: any[] = Array.isArray(data) ? data : (data.items ?? []);
-    return list.map(mapReport);
+    const local = loadLocalReports();
+    try {
+      const data = await apiData<any>("/reports/my");
+      const list: any[] = Array.isArray(data) ? data : (data.items ?? []);
+      const remote = list.map(mapReport);
+      return mergeReports(local, remote);
+    } catch {
+      // backend ainda não implementou — retorna cache local
+      return local;
+    }
   },
   async create(data: { reportedAlias: string; reason: string; details: string }): Promise<Report> {
     const isUuid =
@@ -453,13 +496,22 @@ export const reportService = {
             },
       ),
     });
-    return mapReport(response);
+    const report = mapReport(response);
+    // salva localmente para garantir que o usuário veja mesmo sem GET /reports/my
+    saveLocalReport(report);
+    return report;
   },
   async setStatus(id: string, status: ReportStatus, note: string): Promise<{ ok: true }> {
     await apiData<unknown>(`/reports/admin/reports/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ status, decision: note || "Atualizado pela moderacao." }),
     });
+    // atualiza o status no cache local para o usuário que enviou ver a mudança
+    if (typeof window !== "undefined") {
+      const local = loadLocalReports();
+      const updated = local.map((r) => (r.id === id ? { ...r, status } : r));
+      window.localStorage.setItem(MY_REPORTS_KEY, JSON.stringify(updated));
+    }
     return { ok: true };
   },
 };

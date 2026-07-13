@@ -24,7 +24,11 @@ export const Route = createFileRoute("/mod/")({
 
 function Page() {
   useAuthGuard();
-  const q = useQuery({ queryKey: ["reports"], queryFn: reportService.list });
+  const q = useQuery({
+    queryKey: ["reports"],
+    queryFn: reportService.list,
+    refetchInterval: 60_000,
+  });
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<ReportStatus | "todos">("todos");
 

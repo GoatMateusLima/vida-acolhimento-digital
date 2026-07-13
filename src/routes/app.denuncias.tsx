@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Clock, ShieldAlert } from "lucide-react";
+import { CheckCircle2, ShieldAlert } from "lucide-react";
 import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -34,9 +34,10 @@ const STATUS_COLOR: Record<string, string> = {
 
 function Page() {
   useAuthGuard();
+
   const [justSent, setJustSent] = useState(false);
 
-  // Lê o sinal de "acabou de enviar" do sessionStorage e limpa logo em seguida
+  // Detecta se veio direto após enviar uma denúncia
   useEffect(() => {
     if (sessionStorage.getItem("vida:just-reported") === "1") {
       sessionStorage.removeItem("vida:just-reported");
@@ -44,10 +45,12 @@ function Page() {
     }
   }, []);
 
+  // listMine nunca rejeita — usa cache local como fallback quando backend
+  // ainda não tem GET /reports/my
   const q = useQuery({
     queryKey: ["my-reports"],
     queryFn: reportService.listMine,
-    retry: false, // se o backend não tem o endpoint ainda, não fica tentando
+    staleTime: 30_000,
   });
 
   const list = q.data ?? [];
@@ -64,7 +67,7 @@ function Page() {
         }
       />
 
-      {/* Confirmação de envio recente */}
+      {/* Banner de confirmação quando veio direto do formulário */}
       {justSent && (
         <div className="mb-5 rounded-2xl border border-emerald-300/60 bg-emerald-50/60 p-4 dark:bg-emerald-950/20">
           <div className="flex gap-3">
@@ -74,16 +77,15 @@ function Page() {
                 Denúncia registrada com sucesso
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Nossa equipe irá analisar o caso. Você será notificado por e-mail sobre
-                atualizações. A lista abaixo atualiza automaticamente quando o histórico ficar
-                disponível.
+                Nossa equipe irá analisar o caso. O status aparece abaixo e será atualizado conforme
+                a análise avança.
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Loading */}
+      {/* Skeleton enquanto carrega */}
       {q.isPending && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -92,39 +94,8 @@ function Page() {
         </div>
       )}
 
-      {/* Backend ainda não implementou GET /reports/my */}
-      {q.isError && !justSent && (
-        <div className="rounded-2xl border border-amber-300/60 bg-amber-50/60 p-5 dark:bg-amber-950/20">
-          <div className="flex gap-3">
-            <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
-            <div>
-              <p className="text-sm font-medium">Histórico em implementação</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                O acompanhamento de denúncias está sendo desenvolvido. Suas denúncias estão
-                registradas e serão analisadas. Você receberá atualizações por e-mail.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {q.isError && justSent && (
-        <div className="rounded-2xl border border-amber-300/60 bg-amber-50/60 p-5 dark:bg-amber-950/20">
-          <div className="flex gap-3">
-            <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
-            <div>
-              <p className="text-sm font-medium">Histórico ainda não disponível</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Sua denúncia foi recebida com sucesso. O histórico detalhado ficará visível aqui
-                assim que o recurso for ativado.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Lista vazia */}
-      {!q.isPending && !q.isError && list.length === 0 && (
+      {!q.isPending && list.length === 0 && (
         <EmptyState
           icon={ShieldAlert}
           title="Nenhuma denúncia enviada"
@@ -136,26 +107,28 @@ function Page() {
       {list.length > 0 && (
         <ul className="divide-y rounded-2xl border bg-card">
           {list.map((r) => (
-            <li key={r.id} className="px-4 py-4">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-                <div className="min-w-0">
-                  {/* Cabeçalho */}
+            <li key={r.id} className="px-4 py-5">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+                <div className="min-w-0 space-y-1">
+                  {/* Motivo + alvo */}
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-medium">{r.reason}</p>
-                    <span className="text-xs text-muted-foreground">contra {r.reportedAlias}</span>
+                    <p className="text-sm font-semibold">{r.reason}</p>
+                    <span className="text-xs text-muted-foreground">
+                      · contra {r.reportedAlias}
+                    </span>
                   </div>
 
-                  {/* Data de envio */}
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  {/* Data */}
+                  <p className="text-xs text-muted-foreground">
                     Enviada {fmtRelative(r.createdAt)}
                   </p>
 
                   {/* Trecho dos detalhes */}
                   {r.details && (
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{r.details}</p>
+                    <p className="line-clamp-2 text-xs text-muted-foreground">{r.details}</p>
                   )}
 
-                  {/* Linha do tempo */}
+                  {/* Linha do tempo de atualizações */}
                   {r.history.length > 0 && (
                     <div className="mt-3 space-y-1.5 border-l-2 border-primary/20 pl-3">
                       {r.history.map((h, i) => (
@@ -168,10 +141,15 @@ function Page() {
                   )}
                 </div>
 
-                {/* Status */}
+                {/* Status badge + label legível */}
                 <div className="shrink-0 text-right">
                   <StatusBadge status={r.status} />
-                  <p className={cn("mt-1 text-[10px]", STATUS_COLOR[r.status] ?? "text-muted-foreground")}>
+                  <p
+                    className={cn(
+                      "mt-1 text-[10px]",
+                      STATUS_COLOR[r.status] ?? "text-muted-foreground",
+                    )}
+                  >
                     {STATUS_LABEL[r.status] ?? r.status}
                   </p>
                 </div>
@@ -181,7 +159,7 @@ function Page() {
         </ul>
       )}
 
-      {/* Aviso de privacidade */}
+      {/* Nota de privacidade */}
       <div className="mt-6 flex items-start gap-3 rounded-xl bg-muted/50 p-4">
         <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
         <p className="text-xs text-muted-foreground">
