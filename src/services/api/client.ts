@@ -1,8 +1,30 @@
-export const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api"
+const DEFAULT_API_BASE_URL = import.meta.env.DEV
+  ? "http://localhost:3000/api"
+  : "https://vida-43t9.onrender.com/api";
+
+const DEFAULT_APP_URL = import.meta.env.DEV
+  ? "http://localhost:5173"
+  : "https://vidafrontend.netlify.app";
+
+function productionSafeUrl(configuredUrl: string | undefined, fallbackUrl: string) {
+  const url = configuredUrl?.trim();
+  if (!url) return fallbackUrl;
+
+  const pointsToLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(?:\/|$)/i.test(url);
+  if (import.meta.env.PROD && pointsToLocalhost) return fallbackUrl;
+
+  return url;
+}
+
+export const API_BASE_URL = productionSafeUrl(
+  import.meta.env.VITE_API_BASE_URL,
+  DEFAULT_API_BASE_URL,
 ).replace(/\/$/, "");
 
-export const APP_URL = (import.meta.env.VITE_APP_URL ?? "http://localhost:5173").replace(/\/$/, "");
+export const APP_URL = productionSafeUrl(import.meta.env.VITE_APP_URL, DEFAULT_APP_URL).replace(
+  /\/$/,
+  "",
+);
 
 const TOKEN_KEY = "vidaplus:access_token";
 const REFRESH_TOKEN_KEY = "vidaplus:refresh_token";
@@ -11,6 +33,15 @@ type ApiErrorBody = {
   status?: string;
   message?: string;
   requestId?: string;
+};
+
+type RefreshResponse = {
+  data?: {
+    session?: {
+      access_token?: string;
+      refresh_token?: string;
+    };
+  };
 };
 
 export function getAccessToken() {
@@ -58,7 +89,7 @@ async function refreshAccessToken() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken }),
         });
-        const payload = safeJson<any>(await response.text());
+        const payload = safeJson<RefreshResponse>(await response.text());
         const session = payload?.data?.session;
 
         if (!response.ok || !session?.access_token) return false;
