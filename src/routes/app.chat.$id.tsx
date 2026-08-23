@@ -47,6 +47,7 @@ function Page() {
   const conversation = useQuery({
     queryKey: ["conversation", id],
     queryFn: () => chatService.getConversation(id),
+    refetchInterval: 5000,
   });
 
   // SSE — recebe mensagens e eventos de digitação em tempo real do voluntário
@@ -55,6 +56,13 @@ function Page() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages.data?.length]);
+
+  useEffect(() => {
+    if (conversation.data?.status === "ended") {
+      toast.info("Esta conversa foi encerrada pelo voluntário.");
+      navigate({ to: "/app" });
+    }
+  }, [conversation.data?.status]);
 
   const send = useMutation({
     mutationFn: (t: string) => chatService.sendMessage(id, t, "user"),
@@ -79,9 +87,13 @@ function Page() {
       return { tempId, prev };
     },
     onSuccess: (msg, _t, ctx) => {
-      qc.setQueryData<ChatMessage[]>(["messages", id], (curr) =>
-        (curr ?? []).map((m) => (m.id === ctx?.tempId ? msg : m)),
-      );
+      qc.setQueryData<ChatMessage[]>(["messages", id], (curr) => {
+        const list = curr ?? [];
+        if (list.some((m) => m.id === msg.id)) {
+          return list.filter((m) => m.id !== ctx?.tempId);
+        }
+        return list.map((m) => (m.id === ctx?.tempId ? msg : m));
+      });
     },
     onError: (_e, _t, ctx) => {
       qc.setQueryData<ChatMessage[]>(["messages", id], (curr) =>

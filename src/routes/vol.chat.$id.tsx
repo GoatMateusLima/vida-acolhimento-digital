@@ -47,6 +47,12 @@ function Page() {
     queryFn: () => chatService.getMessages(id),
   });
 
+  const conversation = useQuery({
+    queryKey: ["conversation", id],
+    queryFn: () => chatService.getConversation(id),
+    refetchInterval: 5000,
+  });
+
   // SSE — recebe mensagens e digitação em tempo real do usuário acolhido
   const { typingUser, isTyping } = useChatSSE(id);
 
@@ -54,11 +60,24 @@ function Page() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages.data?.length]);
 
+  useEffect(() => {
+    if (conversation.data?.status === "ended" && !ended) {
+      setEnded(true);
+      toast.info("A conversa foi encerrada pela pessoa acolhida.");
+    }
+  }, [conversation.data?.status, ended]);
+
   const send = useMutation({
     mutationFn: (value: string) => chatService.sendMessage(id, value, "volunteer"),
-    onSuccess: (message) => {
-      qc.setQueryData<ChatMessage[]>(["messages", id], (current) => [...(current ?? []), message]);
+    onMutate: () => {
       setText("");
+    },
+    onSuccess: (message) => {
+      qc.setQueryData<ChatMessage[]>(["messages", id], (current) => {
+        const existing = current ?? [];
+        if (existing.some((m) => m.id === message.id)) return existing;
+        return [...existing, message];
+      });
       if (typingTimer.current) clearTimeout(typingTimer.current);
       isTypingRef.current = false;
       chatService.sendTyping(id, false);
