@@ -65,11 +65,13 @@ function Page() {
     onSuccess: () => {
       setStep("intro");
       setConversationId(null);
+      existingConv.refetch();
       toast("Você saiu da fila.");
     },
     onError: () => {
       setStep("intro");
       setConversationId(null);
+      existingConv.refetch();
     },
   });
 
