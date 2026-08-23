@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { chatService, queueService } from "@/services";
 import { toast } from "sonner";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { API_BASE_URL, getAccessToken } from "@/services/api/client";
 
 export const Route = createFileRoute("/app/conversar")({
   head: () => ({ meta: [{ title: "Conversar agora — VIDA+" }] }),
@@ -85,6 +86,60 @@ function Page() {
       setStep("found");
     }
   }, [poll.data?.status]);
+
+  // Escuta em tempo real pelo SSE para transição imediata ao aceitar
+  useEffect(() => {
+    if (step !== "waiting" || !conversationId) return;
+
+    const token = getAccessToken();
+    if (!token) return;
+
+    const controller = new AbortController();
+    const url = `${API_BASE_URL}/conversations/${conversationId}/events`;
+
+    fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "text/event-stream",
+      },
+      signal: controller.signal,
+    })
+      .then((res) => {
+        if (!res.ok || !res.body) return;
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        function pump() {
+          reader.read().then(({ done, value }) => {
+            if (done || controller.signal.aborted) return;
+            buffer += decoder.decode(value, { stream: true });
+            const blocks = buffer.split("\n\n");
+            buffer = blocks.pop() ?? "";
+
+            for (const block of blocks) {
+              let eventType = "";
+              for (const line of block.split("\n")) {
+                if (line.startsWith("event:")) {
+                  eventType = line.replace("event:", "").trim();
+                }
+              }
+              if (eventType === "accepted") {
+                setStep("found");
+                return; // Encerra loop local
+              }
+            }
+            pump();
+          }).catch(() => {});
+        }
+        pump();
+      })
+      .catch(() => {});
+
+    return () => {
+      controller.abort();
+    };
+  }, [step, conversationId]);
 
   // Fallback de posição decrescente enquanto espera
   useEffect(() => {
