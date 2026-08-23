@@ -31,7 +31,7 @@ function Page() {
   const accept = useMutation({
     mutationFn: (id: string) => volunteerService.accept(id),
     onSuccess: (d) => navigate({ to: "/vol/chat/$id", params: { id: d.conversationId } }),
-    onError: () => toast.error("Não foi possível aceitar o atendimento."),
+    onError: (err: any) => toast.error(err?.message || "Não foi possível aceitar o atendimento."),
   });
 
   const list = q.data ?? [];

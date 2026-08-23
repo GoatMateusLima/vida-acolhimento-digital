@@ -102,7 +102,7 @@ export function useChatSSE(conversationId: string, enabled = true) {
                             : raw.sender_id === window.localStorage.getItem("vidaplus:user_id")
                               ? "user"
                               : "volunteer",
-                        text: raw.body_encrypted ?? raw.body ?? raw.text ?? "",
+                        text: raw.body ?? raw.body_encrypted ?? raw.text ?? "",
                         createdAt: raw.created_at ?? new Date().toISOString(),
                         status: "sent",
                       };

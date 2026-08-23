@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Users, CheckCircle2 } from "lucide-react";
 import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -13,9 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { applicationService, metricsService, queueService, volunteerService } from "@/services";
+import { applicationService, metricsService, queueService, volunteerService, userService } from "@/services";
 import { fmtRelative } from "@/utils/format";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import type { VolunteerStatus } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,8 +28,20 @@ export const Route = createFileRoute("/vol/")({
 });
 
 function Page() {
+  const qc = useQueryClient();
   const navigate = useNavigate();
   const [status, setStatus] = useState<VolunteerStatus>("online");
+
+  const me = useQuery({
+    queryKey: ["me"],
+    queryFn: userService.me,
+  });
+
+  useEffect(() => {
+    if (me.data?.availabilityStatus) {
+      setStatus(me.data.availabilityStatus);
+    }
+  }, [me.data?.availabilityStatus]);
 
   useAuthGuard();
 
@@ -51,12 +63,14 @@ function Page() {
     mutationFn: (s: VolunteerStatus) => volunteerService.setStatus("me", s),
     onSuccess: (d) => {
       setStatus(d.status);
+      qc.invalidateQueries({ queryKey: ["me"] });
       toast.success(`Status atualizado: ${d.status}`);
     },
   });
   const accept = useMutation({
     mutationFn: (id: string) => volunteerService.accept(id),
     onSuccess: (d) => navigate({ to: "/vol/chat/$id", params: { id: d.conversationId } }),
+    onError: (err: any) => toast.error(err?.message || "Não foi possível aceitar o atendimento."),
   });
 
   return (

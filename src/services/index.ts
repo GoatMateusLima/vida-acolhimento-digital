@@ -82,6 +82,7 @@ function mapUser(input: any, emailFallback = ""): User {
     email: input?.email ?? emailFallback,
     role: mapRole(input?.role ?? input?.app_metadata?.role),
     joinedAt: input?.created_at ?? input?.created_at ?? new Date().toISOString(),
+    availabilityStatus: input?.availabilityStatus ?? input?.availability_status,
   };
 }
 
@@ -131,7 +132,7 @@ function mapMessage(input: any): ChatMessage {
     id: input.id,
     conversationId: input.conversation_id,
     author: isSystem ? "system" : mine ? "user" : "volunteer",
-    text: input.body_encrypted ?? input.body ?? input.text ?? "",
+    text: input.body ?? input.body_encrypted ?? input.text ?? "",
     createdAt: input.created_at ?? new Date().toISOString(),
     status: "sent",
   };
@@ -224,7 +225,7 @@ function mapCommunityMessage(input: any): CommunityMessage {
     communityId: input.community_id,
     alias: input.alias ?? input.alias_snapshot ?? "Participante",
     // aceita body_encrypted (consistência com chat) ou body/text
-    text: input.body_encrypted ?? input.body ?? input.text ?? "",
+    text: input.body ?? input.body_encrypted ?? input.text ?? "",
     createdAt: input.created_at ?? new Date().toISOString(),
     isMine: input.is_mine ?? input.isMine,
     reported: input.reported,

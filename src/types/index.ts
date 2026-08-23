@@ -9,6 +9,7 @@ export interface User {
   role: ProfileRole;
   joinedAt: string;
   avatarColor?: string;
+  availabilityStatus?: VolunteerStatus;
 }
 
 export type MessageStatus = "sending" | "sent" | "error";
