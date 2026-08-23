@@ -35,6 +35,7 @@ function Page() {
   const [endOpen, setEndOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTypingRef = useRef(false);
 
   useAuthGuard();
 
@@ -103,13 +104,21 @@ function Page() {
     const val = e.target.value;
     setText(val);
     if (val.trim()) {
-      chatService.sendTyping(id, true);
+      if (!isTypingRef.current) {
+        isTypingRef.current = true;
+        chatService.sendTyping(id, true);
+      }
       if (typingTimer.current) clearTimeout(typingTimer.current);
       typingTimer.current = setTimeout(() => {
+        isTypingRef.current = false;
         chatService.sendTyping(id, false);
       }, 2500);
     } else {
-      chatService.sendTyping(id, false);
+      if (isTypingRef.current) {
+        isTypingRef.current = false;
+        if (typingTimer.current) clearTimeout(typingTimer.current);
+        chatService.sendTyping(id, false);
+      }
     }
   };
 
@@ -118,6 +127,7 @@ function Page() {
     if (!t) return;
     setText("");
     if (typingTimer.current) clearTimeout(typingTimer.current);
+    isTypingRef.current = false;
     chatService.sendTyping(id, false);
     send.mutate(t);
   };

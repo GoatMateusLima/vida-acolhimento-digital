@@ -33,6 +33,7 @@ function Page() {
   const qc = useQueryClient();
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTypingRef = useRef(false);
   const [text, setText] = useState("");
   const [actionTaken, setActionTaken] = useState("");
   const [riskLevel, setRiskLevel] = useState("baixo");
@@ -59,6 +60,7 @@ function Page() {
       qc.setQueryData<ChatMessage[]>(["messages", id], (current) => [...(current ?? []), message]);
       setText("");
       if (typingTimer.current) clearTimeout(typingTimer.current);
+      isTypingRef.current = false;
       chatService.sendTyping(id, false);
     },
     onError: () => toast.error("Não foi possível enviar a mensagem."),
@@ -68,13 +70,21 @@ function Page() {
     const value = event.target.value;
     setText(value);
     if (value.trim()) {
-      chatService.sendTyping(id, true);
+      if (!isTypingRef.current) {
+        isTypingRef.current = true;
+        chatService.sendTyping(id, true);
+      }
       if (typingTimer.current) clearTimeout(typingTimer.current);
       typingTimer.current = setTimeout(() => {
+        isTypingRef.current = false;
         chatService.sendTyping(id, false);
       }, 2500);
     } else {
-      chatService.sendTyping(id, false);
+      if (isTypingRef.current) {
+        isTypingRef.current = false;
+        if (typingTimer.current) clearTimeout(typingTimer.current);
+        chatService.sendTyping(id, false);
+      }
     }
   };
 
