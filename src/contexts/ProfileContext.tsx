@@ -67,7 +67,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   };
 
   const setAuth = (b: boolean) => {
-    setAuthenticated(b);
+    setAuthenticatedState(b);
     if (typeof window !== "undefined") {
       if (b) window.localStorage.setItem(AUTH_KEY, "1");
       else window.localStorage.removeItem(AUTH_KEY);
