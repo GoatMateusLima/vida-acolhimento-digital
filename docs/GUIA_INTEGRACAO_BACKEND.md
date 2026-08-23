@@ -22,22 +22,22 @@ VITE_APP_URL=http://localhost:5173
 Frontend local com backend online:
 
 ```env
-VITE_API_BASE_URL=https://vida-43t9.onrender.com/api
+VITE_API_BASE_URL=https://vida-server-9khr.onrender.com/api
 VITE_APP_URL=http://localhost:5173
 ```
 
 Frontend Netlify com backend Render:
 
 ```env
-VITE_API_BASE_URL=https://vida-43t9.onrender.com/api
-VITE_APP_URL=https://vidafrontend.netlify.app
+VITE_API_BASE_URL=https://vida-server-9khr.onrender.com/api
+VITE_APP_URL=https://vida-acolhimento-digital.netlify.app
 ```
 
 Backend Render:
 
 ```env
-CORS_ORIGINS=https://vidafrontend.netlify.app,http://localhost:5173
-PASSWORD_RESET_REDIRECT_URL=https://vidafrontend.netlify.app/nova-senha
+CORS_ORIGINS=https://vida-acolhimento-digital.netlify.app,http://localhost:5173
+PASSWORD_RESET_REDIRECT_URL=https://vida-acolhimento-digital.netlify.app/nova-senha
 NODE_ENV=production
 TRUST_PROXY=1
 ```

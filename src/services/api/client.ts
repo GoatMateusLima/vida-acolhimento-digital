@@ -1,10 +1,10 @@
 const DEFAULT_API_BASE_URL = import.meta.env.DEV
   ? "http://localhost:3000/api"
-  : "https://vida-43t9.onrender.com/api";
+  : "https://vida-server-9khr.onrender.com/api";
 
 const DEFAULT_APP_URL = import.meta.env.DEV
   ? "http://localhost:5173"
-  : "https://vidafrontend.netlify.app";
+  : "https://vida-acolhimento-digital.netlify.app";
 
 function productionSafeUrl(configuredUrl: string | undefined, fallbackUrl: string) {
   const url = configuredUrl?.trim();

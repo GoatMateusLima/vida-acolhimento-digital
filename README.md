@@ -28,15 +28,15 @@ VITE_APP_URL=http://localhost:5173
 Para testar frontend local com backend online:
 
 ```env
-VITE_API_BASE_URL=https://vida-43t9.onrender.com/api
+VITE_API_BASE_URL=https://vida-server-9khr.onrender.com/api
 VITE_APP_URL=http://localhost:5173
 ```
 
 No Netlify:
 
 ```env
-VITE_API_BASE_URL=https://vida-43t9.onrender.com/api
-VITE_APP_URL=https://vidafrontend.netlify.app
+VITE_API_BASE_URL=https://vida-server-9khr.onrender.com/api
+VITE_APP_URL=https://vida-acolhimento-digital.netlify.app
 ```
 
 ## Scripts

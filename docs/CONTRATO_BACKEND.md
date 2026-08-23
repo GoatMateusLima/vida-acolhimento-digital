@@ -15,7 +15,7 @@ Todos os endpoints devem estar sob esse prefixo.
 
 ```
 Desenvolvimento local : http://localhost:3000/api
-Produção (Render)     : https://vida-43t9.onrender.com/api
+Produção (Render)     : https://vida-server-9khr.onrender.com/api
 ```
 
 ### CORS — obrigatório
@@ -24,7 +24,7 @@ O backend deve aceitar requisições das origens abaixo:
 
 ```
 http://localhost:5173
-https://vidafrontend.netlify.app
+https://vida-acolhimento-digital.netlify.app
 ```
 
 Variável de ambiente sugerida no backend:
