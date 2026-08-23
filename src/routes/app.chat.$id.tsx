@@ -43,6 +43,11 @@ function Page() {
     queryFn: () => chatService.getMessages(id),
   });
 
+  const conversation = useQuery({
+    queryKey: ["conversation", id],
+    queryFn: () => chatService.getConversation(id),
+  });
+
   // SSE — recebe mensagens e eventos de digitação em tempo real do voluntário
   const { typingUser, isTyping } = useChatSSE(id);
 
@@ -123,7 +128,11 @@ function Page() {
         {/* Status bar */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b bg-card px-4 py-3">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">Voluntário disponível</p>
+            <p className="truncate text-sm font-semibold">
+              {conversation.data?.volunteerAlias
+                ? `VOLUNTARIO ${conversation.data.volunteerAlias.replace(/^voluntário$/i, "")}`.trim()
+                : "VOLUNTARIO"}
+            </p>
             <p className="truncate text-xs text-muted-foreground">
               Conversa em andamento · confidencial
             </p>

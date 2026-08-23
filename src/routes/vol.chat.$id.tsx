@@ -271,7 +271,7 @@ function VolunteerBubble({ message }: { message: ChatMessage }) {
   if (message.author === "system") {
     return <p className="my-1 text-center text-xs text-muted-foreground">{message.text}</p>;
   }
-  const mine = message.author === "volunteer";
+  const mine = message.author === "user";
   return (
     <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
       <div
