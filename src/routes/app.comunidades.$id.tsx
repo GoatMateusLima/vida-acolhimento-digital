@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import { Flag, LogOut, Send, ShieldCheck, UsersRound } from "lucide-react";
+import { Flag, LogOut, Send, ShieldCheck, UsersRound, Wifi } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/layouts/AppShell";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { communityService, reportService } from "@/services";
 import { fmtRelative } from "@/utils/format";
 import { cn } from "@/lib/utils";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useCommunitySSE } from "@/hooks/useCommunitySSE";
 
 export const Route = createFileRoute("/app/comunidades/$id")({
   head: () => ({ meta: [{ title: "Grupo de apoio — VIDA+" }] }),
@@ -23,25 +24,38 @@ function Page() {
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const group = useQuery({ queryKey: ["community", id], queryFn: () => communityService.get(id) });
   const messages = useQuery({
     queryKey: ["community-messages", id],
     queryFn: () => communityService.getMessages(id),
-    refetchInterval: 8000, // polling leve — sem SSE para comunidades
+    refetchInterval: 12000,
   });
+
+  // Conexão SSE em tempo real para mensagens, presenças e digitação
+  const { onlineUsers, onlineCount, typingText, isTyping } = useCommunitySSE(
+    id,
+    group.data?.myAlias,
+    !!group.data?.joined
+  );
 
   // Scroll automático ao receber novas mensagens
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages.data?.length]);
+
   const send = useMutation({
     mutationFn: (message: string) => communityService.sendMessage(id, message),
     onSuccess: () => {
       setText("");
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      communityService.sendTyping(id, false, group.data?.myAlias);
       queryClient.invalidateQueries({ queryKey: ["community-messages", id] });
     },
     onError: (error) => toast.error(error.message),
   });
+
   const leave = useMutation({
     mutationFn: () => communityService.leave(id),
     onSuccess: () => {
@@ -50,12 +64,28 @@ function Page() {
       navigate({ to: "/app/comunidades" });
     },
   });
+
   const reportMessage = useMutation({
     mutationFn: ({ messageId, alias }: { messageId: string; alias: string }) =>
       reportService.createFromMessage(messageId, alias),
     onSuccess: () => toast.success("Mensagem denunciada. A moderação fará a análise."),
     onError: (error) => toast.error(error.message),
   });
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setText(val);
+
+    if (val.trim() && group.data?.joined) {
+      communityService.sendTyping(id, true, group.data.myAlias);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        communityService.sendTyping(id, false, group.data?.myAlias);
+      }, 2500);
+    } else if (!val.trim()) {
+      communityService.sendTyping(id, false, group.data?.myAlias);
+    }
+  };
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -90,9 +120,20 @@ function Page() {
                   ← Todos os grupos
                 </Link>
                 <h1 className="mt-2 font-display text-2xl font-semibold">{group.data.name}</h1>
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <UsersRound className="h-3.5 w-3.5" />
-                  {group.data.memberCount} participantes · você é {group.data.myAlias}
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <UsersRound className="h-3.5 w-3.5" />
+                    {group.data.memberCount} participantes
+                  </span>
+                  <span>·</span>
+                  <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
+                    <Wifi className="h-3.5 w-3.5 text-emerald-500" />
+                    {onlineCount || 1} online
+                  </span>
+                  <span>·</span>
+                  <span>
+                    você é <strong className="text-foreground">{group.data.myAlias}</strong>
+                  </span>
                 </p>
               </div>
               <Button
@@ -152,10 +193,20 @@ function Page() {
           </div>
 
           <form onSubmit={submit} className="border-t p-3 sm:p-4">
+            {isTyping && (
+              <div className="mb-2 flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 text-xs text-primary animate-in fade-in slide-in-from-bottom-1">
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
+                </span>
+                <span className="font-medium">{typingText}</span>
+              </div>
+            )}
             <div className="flex items-end gap-2">
               <Textarea
                 value={text}
-                onChange={(event) => setText(event.target.value)}
+                onChange={handleTextChange}
                 placeholder={`Escreva como ${group.data.myAlias}...`}
                 rows={2}
                 maxLength={2000}
@@ -173,6 +224,39 @@ function Page() {
         </section>
 
         <aside className="space-y-4">
+          <section className="rounded-2xl border bg-card p-4 shadow-soft">
+            <div className="flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-sm font-semibold">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                Online agora ({onlineCount || 1})
+              </h2>
+            </div>
+            <div className="mt-3 max-h-44 space-y-2 overflow-y-auto">
+              {onlineUsers.length > 0 ? (
+                onlineUsers.map((u) => (
+                  <div key={u.userId} className="flex items-center gap-2 text-xs">
+                    <div className="grid h-6 w-6 place-items-center rounded-full bg-primary/15 text-[10px] font-medium text-primary">
+                      {u.alias.slice(0, 2).toUpperCase()}
+                    </div>
+                    <span className="truncate font-medium text-foreground">
+                      {u.alias}
+                      {u.alias === group.data?.myAlias && (
+                        <span className="ml-1 text-[10px] text-muted-foreground">(você)</span>
+                      )}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="grid h-6 w-6 place-items-center rounded-full bg-primary/15 text-[10px] font-medium text-primary">
+                    {(group.data?.myAlias || "EU").slice(0, 2).toUpperCase()}
+                  </div>
+                  <span className="font-medium text-foreground">{group.data?.myAlias || "Você"}</span>
+                </div>
+              )}
+            </div>
+          </section>
+
           <section className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
             <ShieldCheck className="h-5 w-5 text-primary" />
             <h2 className="mt-2 text-sm font-semibold">Como sua identidade é protegida</h2>

@@ -314,15 +314,23 @@ export const queueService = {
   },
   async join(): Promise<{ position: number; estimatedWait: number; conversationId: string }> {
     const data = await apiData<any>("/conversations", { method: "POST" });
-    // position e estimated_wait_minutes são retornados quando backend implementar gap #2
-    // fallback: position=1, estimatedWait=4 enquanto o backend não os envia
     return {
       position: data.position ?? 1,
       estimatedWait: data.estimated_wait_minutes ?? data.estimatedWait ?? 4,
       conversationId: data.id,
     };
   },
-  async cancel(): Promise<{ ok: true }> {
+  async cancel(conversationId?: string): Promise<{ ok: true }> {
+    if (conversationId) {
+      try {
+        await apiData<unknown>(`/conversations/${conversationId}/close`, {
+          method: "POST",
+          body: JSON.stringify({ reason: "cancelado_pelo_usuario" }),
+        });
+      } catch {
+        // ignora se já estava encerrada
+      }
+    }
     return { ok: true };
   },
 };
@@ -330,7 +338,6 @@ export const queueService = {
 export const chatService = {
   async getConversations(): Promise<Conversation[]> {
     const data = await apiData<any>("/conversations");
-    // backend retorna { items, page, limit, total }
     const list: any[] = Array.isArray(data) ? data : (data.items ?? []);
     return list.map(mapConversation);
   },
@@ -340,7 +347,6 @@ export const chatService = {
   },
   async getMessages(id: string): Promise<ChatMessage[]> {
     const data = await apiData<any>(`/conversations/${id}`);
-    // backend retorna mensagens dentro do objeto da conversa
     return (data.messages ?? []).map(mapMessage);
   },
   async sendMessage(
@@ -353,6 +359,16 @@ export const chatService = {
       body: JSON.stringify({ text }),
     });
     return mapMessage(data);
+  },
+  async sendTyping(conversationId: string, typing: boolean): Promise<void> {
+    try {
+      await apiData<unknown>(`/conversations/${conversationId}/typing`, {
+        method: "POST",
+        body: JSON.stringify({ typing }),
+      });
+    } catch {
+      // silencioso
+    }
   },
   async endConversation(id: string): Promise<{ ok: true }> {
     await apiData<unknown>(`/conversations/${id}/close`, {
@@ -599,6 +615,43 @@ export const communityService = {
       body: JSON.stringify({ text }),
     });
     return mapCommunityMessage(data);
+  },
+  async sendTyping(communityId: string, typing: boolean, alias?: string): Promise<void> {
+    try {
+      await apiData<unknown>(`/communities/${communityId}/typing`, {
+        method: "POST",
+        body: JSON.stringify({ typing, alias }),
+      });
+    } catch {
+      // silencioso
+    }
+  },
+  async sendHeartbeat(
+    communityId: string,
+    alias?: string,
+  ): Promise<{ onlineCount: number; users: Array<{ userId: string; alias: string }> }> {
+    try {
+      const data = await apiData<any>(`/communities/${communityId}/presence`, {
+        method: "POST",
+        body: JSON.stringify({ alias }),
+      });
+      return {
+        onlineCount: data.onlineCount ?? (data.users?.length || 1),
+        users: data.users ?? [],
+      };
+    } catch {
+      return { onlineCount: 1, users: [] };
+    }
+  },
+  async getOnlineUsers(
+    communityId: string,
+  ): Promise<Array<{ userId: string; alias: string; role?: string }>> {
+    try {
+      const data = await apiData<any>(`/communities/${communityId}/online-users`);
+      return data?.users ?? [];
+    } catch {
+      return [];
+    }
   },
   async revealIdentity(messageId: string, reason: string): Promise<CommunityIdentity> {
     const data = await apiData<any>(`/communities/messages/${messageId}/reveal-identity`, {

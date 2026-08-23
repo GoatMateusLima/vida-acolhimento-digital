@@ -34,6 +34,7 @@ function Page() {
   const [text, setText] = useState("");
   const [endOpen, setEndOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useAuthGuard();
 
@@ -42,8 +43,8 @@ function Page() {
     queryFn: () => chatService.getMessages(id),
   });
 
-  // SSE — recebe mensagens em tempo real do voluntário
-  useChatSSE(id);
+  // SSE — recebe mensagens e eventos de digitação em tempo real do voluntário
+  const { typingUser, isTyping } = useChatSSE(id);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -93,10 +94,26 @@ function Page() {
     onError: () => toast.error("Não foi possível encerrar. Tente novamente."),
   });
 
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setText(val);
+    if (val.trim()) {
+      chatService.sendTyping(id, true);
+      if (typingTimer.current) clearTimeout(typingTimer.current);
+      typingTimer.current = setTimeout(() => {
+        chatService.sendTyping(id, false);
+      }, 2500);
+    } else {
+      chatService.sendTyping(id, false);
+    }
+  };
+
   const handleSend = () => {
     const t = text.trim();
     if (!t) return;
     setText("");
+    if (typingTimer.current) clearTimeout(typingTimer.current);
+    chatService.sendTyping(id, false);
     send.mutate(t);
   };
 
@@ -157,6 +174,16 @@ function Page() {
           }}
           className="border-t bg-card p-3 safe-bottom"
         >
+          {isTyping && (
+            <div className="mx-auto mb-2 flex max-w-2xl items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 text-xs text-primary animate-in fade-in slide-in-from-bottom-1">
+              <span className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
+              </span>
+              <span className="font-medium">{typingUser || "Voluntário"} está digitando...</span>
+            </div>
+          )}
           <div className="mx-auto flex max-w-2xl items-end gap-2">
             <label htmlFor="msg" className="sr-only">
               Mensagem
@@ -164,7 +191,7 @@ function Page() {
             <textarea
               id="msg"
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={handleTextChange}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();

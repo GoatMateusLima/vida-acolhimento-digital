@@ -73,6 +73,7 @@ export function clearSession() {
   window.localStorage.removeItem("vidaplus:user_id");
   window.localStorage.removeItem("vidaplus:role");
   window.localStorage.removeItem("vidaplus:auth");
+  window.localStorage.removeItem("vidaplus:user");
 }
 
 let activeRefresh: Promise<boolean> | null = null;

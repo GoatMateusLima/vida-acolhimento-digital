@@ -18,22 +18,47 @@ const AUTH_KEY = "vidaplus:auth";
 const USER_KEY = "vidaplus:user";
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
-  const [role, setRoleState] = useState<ProfileRole>("usuario");
-  const [isAuthenticated, setAuthenticated] = useState(false);
-  const [currentUser, setCurrentUserState] = useState<User | null>(null);
-
-  // Restaura estado da sessão ao iniciar
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const [role, setRoleState] = useState<ProfileRole>(() => {
+    if (typeof window === "undefined") return "usuario";
     const r = window.localStorage.getItem(KEY) as ProfileRole | null;
-    if (r) setRoleState(r);
-    setAuthenticated(window.localStorage.getItem(AUTH_KEY) === "1");
+    return r || "usuario";
+  });
+
+  const [isAuthenticated, setAuthenticatedState] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    const authFlag = window.localStorage.getItem(AUTH_KEY) === "1";
+    const hasToken = !!window.localStorage.getItem("vidaplus:access_token");
+    return authFlag || hasToken;
+  });
+
+  const [currentUser, setCurrentUserState] = useState<User | null>(() => {
+    if (typeof window === "undefined") return null;
     try {
       const stored = window.localStorage.getItem(USER_KEY);
-      if (stored) setCurrentUserState(JSON.parse(stored) as User);
+      return stored ? (JSON.parse(stored) as User) : null;
     } catch {
-      // ignora JSON corrompido
+      return null;
     }
+  });
+
+  // Garante sincronização se houver mudanças em outras abas
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncFromStorage = () => {
+      const r = window.localStorage.getItem(KEY) as ProfileRole | null;
+      if (r) setRoleState(r);
+      const authFlag = window.localStorage.getItem(AUTH_KEY) === "1";
+      const hasToken = !!window.localStorage.getItem("vidaplus:access_token");
+      setAuthenticatedState(authFlag || hasToken);
+      try {
+        const stored = window.localStorage.getItem(USER_KEY);
+        if (stored) setCurrentUserState(JSON.parse(stored) as User);
+      } catch {
+        // ignora
+      }
+    };
+    window.addEventListener("storage", syncFromStorage);
+    return () => window.removeEventListener("storage", syncFromStorage);
   }, []);
 
   const setRole = (r: ProfileRole) => {

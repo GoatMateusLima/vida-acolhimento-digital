@@ -30,7 +30,8 @@ export function useAuthGuard() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    if (!isAuthenticated || !getAccessToken()) {
+    const token = getAccessToken();
+    if (!isAuthenticated && !token) {
       clearSession();
       navigate({ to: "/login", replace: true });
       return;
@@ -40,12 +41,20 @@ export function useAuthGuard() {
     const match = PREFIX_ROLE.find((p) => pathname.startsWith(p.prefix));
     if (!match) return;
 
-    if (role !== match.role) {
+    if (!hasRequiredRole(role, match.prefix)) {
       // Redireciona para a área correta da role atual
       const home = roleHome(role);
       navigate({ to: home, replace: true });
     }
   }, [isAuthenticated, role, pathname, navigate]);
+}
+
+function hasRequiredRole(userRole: ProfileRole, prefix: string): boolean {
+  if (prefix === "/app") return true; // Qualquer papel autenticado pode acessar /app
+  if (prefix === "/vol") return ["voluntario", "moderador", "administrador"].includes(userRole);
+  if (prefix === "/mod") return ["moderador", "administrador"].includes(userRole);
+  if (prefix === "/admin") return userRole === "administrador";
+  return true;
 }
 
 /**

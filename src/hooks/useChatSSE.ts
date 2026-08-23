@@ -1,37 +1,31 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { API_BASE_URL, getAccessToken } from "@/services/api/client";
 import type { ChatMessage } from "@/types";
 
 /**
  * Conecta ao SSE de mensagens de uma conversa e atualiza o cache do TanStack Query
- * automaticamente quando novas mensagens chegam.
- *
- * O backend expõe:
- *   GET /conversations/:id/events?after=<ISO>
- *
- * Eventos esperados:
- *   event: message  → nova mensagem (objeto ChatMessage serializado)
- *   event: heartbeat → keepalive, ignorado
- *   event: error    → canal encerrado
+ * automaticamente quando novas mensagens ou eventos de digitação chegam.
  */
 export function useChatSSE(conversationId: string, enabled = true) {
   const qc = useQueryClient();
+  const [typingUser, setTypingUser] = useState<string | null>(null);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const attemptRef = useRef(0);
 
   useEffect(() => {
     if (!enabled || !conversationId) return;
+
+    let controller = new AbortController();
+    let isMounted = true;
 
     function connect() {
       const token = getAccessToken();
       if (!token) return;
 
-      // EventSource nativo não suporta headers — usamos fetch + ReadableStream
-      // para enviar o Authorization. Se o backend aceitar o token via query param,
-      // podemos usar EventSource direto como fallback.
       const url = `${API_BASE_URL}/conversations/${conversationId}/events`;
-
-      const controller = new AbortController();
-
+      
       fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -40,8 +34,10 @@ export function useChatSSE(conversationId: string, enabled = true) {
         signal: controller.signal,
       })
         .then((res) => {
-          if (!res.ok || !res.body) return;
+          if (!res.ok) throw new Error("Connection failed");
+          if (!res.body) throw new Error("No body");
 
+          attemptRef.current = 0; // Reset backoff on success
           const reader = res.body.getReader();
           const decoder = new TextDecoder();
           let buffer = "";
@@ -50,10 +46,12 @@ export function useChatSSE(conversationId: string, enabled = true) {
             reader
               .read()
               .then(({ done, value }) => {
-                if (done) return;
+                if (done) {
+                  if (isMounted) handleReconnect();
+                  return;
+                }
                 buffer += decoder.decode(value, { stream: true });
 
-                // Processa cada bloco SSE separado por linha dupla
                 const blocks = buffer.split("\n\n");
                 buffer = blocks.pop() ?? "";
 
@@ -70,12 +68,31 @@ export function useChatSSE(conversationId: string, enabled = true) {
                   }
 
                   if (eventType === "heartbeat" || !dataLine) continue;
-                  if (eventType === "error") return; // canal encerrado normalmente
+                  if (eventType === "error") continue;
+
+                  if (eventType === "typing") {
+                    try {
+                      const raw = JSON.parse(dataLine);
+                      const myId = window.localStorage.getItem("vidaplus:user_id");
+                      if (raw.userId && raw.userId !== myId) {
+                        if (raw.typing) {
+                          setTypingUser(raw.alias || "Outra pessoa");
+                          if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+                          typingTimerRef.current = setTimeout(() => {
+                            setTypingUser(null);
+                          }, 4000);
+                        } else {
+                          setTypingUser(null);
+                        }
+                      }
+                    } catch {}
+                    continue;
+                  }
 
                   if (eventType === "message") {
                     try {
                       const raw = JSON.parse(dataLine);
-                      // Monta ChatMessage compatível com o cache existente
+                      setTypingUser(null);
                       const msg: ChatMessage = {
                         id: raw.id,
                         conversationId: raw.conversation_id ?? conversationId,
@@ -90,43 +107,51 @@ export function useChatSSE(conversationId: string, enabled = true) {
                         status: "sent",
                       };
 
-                      // Adiciona ao cache sem duplicar
                       qc.setQueryData<ChatMessage[]>(["messages", conversationId], (curr) => {
                         const existing = curr ?? [];
                         if (existing.some((m) => m.id === msg.id)) return existing;
                         return [...existing, msg];
                       });
-                    } catch {
-                      // ignora JSON inválido
-                    }
+                    } catch {}
                   }
                 }
-
                 pump();
               })
               .catch(() => {
-                // reconecta após 3 s se não for abort
-                if (!controller.signal.aborted) {
-                  setTimeout(connect, 3000);
-                }
+                if (isMounted) handleReconnect();
               });
           }
 
           pump();
         })
         .catch(() => {
-          if (!controller.signal.aborted) {
-            setTimeout(connect, 3000);
-          }
+          if (isMounted) handleReconnect();
         });
-
-      return controller;
     }
 
-    const controller = connect();
+    function handleReconnect() {
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      const delay = Math.min(1000 * Math.pow(2, attemptRef.current), 30000);
+      attemptRef.current += 1;
+      reconnectTimerRef.current = setTimeout(() => {
+        controller.abort();
+        controller = new AbortController();
+        connect();
+      }, delay);
+    }
+
+    connect();
 
     return () => {
-      controller?.abort();
+      isMounted = false;
+      controller.abort();
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
     };
   }, [conversationId, enabled, qc]);
+
+  return {
+    typingUser,
+    isTyping: !!typingUser,
+  };
 }

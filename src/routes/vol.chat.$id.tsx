@@ -32,6 +32,7 @@ function Page() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [text, setText] = useState("");
   const [actionTaken, setActionTaken] = useState("");
   const [riskLevel, setRiskLevel] = useState("baixo");
@@ -45,8 +46,8 @@ function Page() {
     queryFn: () => chatService.getMessages(id),
   });
 
-  // SSE — recebe mensagens em tempo real do usuário acolhido
-  useChatSSE(id);
+  // SSE — recebe mensagens e digitação em tempo real do usuário acolhido
+  const { typingUser, isTyping } = useChatSSE(id);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -57,9 +58,25 @@ function Page() {
     onSuccess: (message) => {
       qc.setQueryData<ChatMessage[]>(["messages", id], (current) => [...(current ?? []), message]);
       setText("");
+      if (typingTimer.current) clearTimeout(typingTimer.current);
+      chatService.sendTyping(id, false);
     },
     onError: () => toast.error("Não foi possível enviar a mensagem."),
   });
+
+  const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = event.target.value;
+    setText(value);
+    if (value.trim()) {
+      chatService.sendTyping(id, true);
+      if (typingTimer.current) clearTimeout(typingTimer.current);
+      typingTimer.current = setTimeout(() => {
+        chatService.sendTyping(id, false);
+      }, 2500);
+    } else {
+      chatService.sendTyping(id, false);
+    }
+  };
 
   const flagRisk = useMutation({
     mutationFn: () =>
@@ -129,6 +146,16 @@ function Page() {
                 if (value) send.mutate(value);
               }}
             >
+              {isTyping && (
+                <div className="mx-auto mb-2 flex max-w-2xl items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 text-xs text-primary animate-in fade-in slide-in-from-bottom-1">
+                  <span className="flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
+                  </span>
+                  <span className="font-medium">{typingUser || "Pessoa acolhida"} está digitando...</span>
+                </div>
+              )}
               <div className="mx-auto flex max-w-2xl items-end gap-2">
                 <label htmlFor="volunteer-message" className="sr-only">
                   Mensagem
@@ -137,7 +164,7 @@ function Page() {
                   id="volunteer-message"
                   rows={1}
                   value={text}
-                  onChange={(event) => setText(event.target.value)}
+                  onChange={handleTextChange}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && !event.shiftKey) {
                       event.preventDefault();

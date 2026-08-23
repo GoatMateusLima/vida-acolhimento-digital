@@ -19,11 +19,33 @@ type Step = "intro" | "waiting" | "found";
 function Page() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("intro");
-  const [pos, setPos] = useState(3);
+  const [pos, setPos] = useState(1);
   const [eta, setEta] = useState(4);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
   useAuthGuard();
+
+  // Consulta conversas ativas do usuário para restaurar estado se já estiver aguardando/em atendimento
+  const existingConv = useQuery({
+    queryKey: ["conversations"],
+    queryFn: chatService.getConversations,
+  });
+
+  useEffect(() => {
+    if (step === "intro" && existingConv.data) {
+      const openConv = existingConv.data.find(
+        (c) => c.status === "waiting" || c.status === "active"
+      );
+      if (openConv) {
+        setConversationId(openConv.id);
+        if (openConv.status === "active") {
+          setStep("found");
+        } else {
+          setStep("waiting");
+        }
+      }
+    }
+  }, [existingConv.data, step]);
 
   const join = useMutation({
     mutationFn: queueService.join,
@@ -33,15 +55,29 @@ function Page() {
       setConversationId(d.conversationId);
       setStep("waiting");
     },
-    onError: () => toast.error("Não foi possível entrar na fila. Tente novamente."),
+    onError: (err: Error) =>
+      toast.error(err?.message || "Não foi possível entrar na fila. Tente novamente."),
   });
 
-  // Polling: verifica a cada 5s se um voluntário aceitou (status → "active")
+  const cancel = useMutation({
+    mutationFn: () => queueService.cancel(conversationId ?? undefined),
+    onSuccess: () => {
+      setStep("intro");
+      setConversationId(null);
+      toast("Você saiu da fila.");
+    },
+    onError: () => {
+      setStep("intro");
+      setConversationId(null);
+    },
+  });
+
+  // Polling: verifica a cada 4s se um voluntário aceitou (status → "active")
   const poll = useQuery({
     queryKey: ["conversation-status", conversationId],
     queryFn: () => chatService.getConversation(conversationId!),
     enabled: step === "waiting" && !!conversationId,
-    refetchInterval: 5000,
+    refetchInterval: 4000,
   });
 
   useEffect(() => {
@@ -69,7 +105,7 @@ function Page() {
           <div className="rounded-3xl border bg-card p-6 shadow-soft">
             <Heart className="h-7 w-7 text-primary" />
             <h2 className="mt-3 font-display text-2xl font-semibold">Pronto para começar?</h2>
-            <p className="mt-2 text-sm text-muted-foreground text-pretty">
+            <p className="mt-2 text-pretty text-sm text-muted-foreground">
               Sua conversa é anônima e confidencial. Você pode encerrá-la a qualquer momento.
             </p>
             <Button
@@ -99,10 +135,8 @@ function Page() {
           <Button
             variant="outline"
             className="mt-6 gap-2"
-            onClick={() => {
-              setStep("intro");
-              toast("Você saiu da fila.");
-            }}
+            disabled={cancel.isPending}
+            onClick={() => cancel.mutate()}
           >
             <X className="h-4 w-4" /> Cancelar espera
           </Button>
