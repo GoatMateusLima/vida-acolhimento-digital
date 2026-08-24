@@ -208,12 +208,16 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             </nav>
           </div>
 
-          {/* Bottom bar */}
-          <div className="mt-10 pt-6 border-t border-border/60 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <p className="text-xs text-muted-foreground/50">
-              © {new Date().getFullYear()} VIDA+. Feito com <span className="text-primary">♥</span>{" "}
-              por pessoas que se importam.
-            </p>
+          <div className="mt-10 pt-6 border-t border-border/60 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-1 max-w-xl">
+              <p className="text-xs text-muted-foreground/50">
+                © {new Date().getFullYear()} VIDA+. Feito com <span className="text-primary">♥</span>{" "}
+                por pessoas que se importam.
+              </p>
+              <p className="text-xs text-muted-foreground/60 leading-relaxed">
+                Projeto desenvolvido voluntariamente pela turma 841 do curso em enfermagem da EEEM Cônego João Batista Sorg - Carazinho/RS e demais voluntários 2026
+              </p>
+            </div>
             <p className="text-xs text-muted-foreground/50">
               Em emergência: <strong className="text-muted-foreground">CVV 188</strong>
               {" · "}
