@@ -342,29 +342,21 @@ function VolunteerBubble({
   }
   const mine = message.author === "user";
   return (
-    <div className={cn("flex group items-center gap-2", mine ? "justify-end flex-row" : "justify-start flex-row-reverse")}>
-      {onReply && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onReply}
-          className="opacity-0 group-hover:opacity-100 max-md:opacity-60 transition-opacity h-8 w-8 rounded-full shrink-0 text-muted-foreground hover:text-foreground"
-        >
-          <CornerUpLeft className="h-4 w-4" />
-        </Button>
-      )}
+    <div className={cn("flex group items-end gap-1.5", mine ? "justify-end" : "justify-start")}>
+      {/* Bolha */}
       <div
         className={cn(
-          "max-w-[86%] rounded-2xl px-3.5 py-2.5 text-sm relative shadow-soft",
-          mine ? "bg-primary text-primary-foreground" : "border bg-card",
+          "relative max-w-[78%] rounded-2xl px-3.5 py-2.5 text-sm shadow-sm",
+          mine
+            ? "rounded-br-sm bg-primary text-primary-foreground"
+            : "rounded-bl-sm border bg-card",
         )}
       >
         {replyToMessage && (
           <div className={cn(
             "mb-1.5 rounded border-l-2 p-1.5 text-xs",
-            mine 
-              ? "border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground/90" 
+            mine
+              ? "border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground/90"
               : "border-primary/40 bg-muted/60 text-muted-foreground"
           )}>
             <span className={cn(
@@ -379,13 +371,26 @@ function VolunteerBubble({
         <p className="whitespace-pre-wrap text-pretty">{message.text}</p>
         <p
           className={cn(
-            "mt-1 text-[10px]",
-            mine ? "text-primary-foreground/70" : "text-muted-foreground",
+            "mt-0.5 text-[10px]",
+            mine ? "text-right text-primary-foreground/70" : "text-muted-foreground",
           )}
         >
           {fmtTime(message.createdAt)}
         </p>
       </div>
+      {/* Botão de responder — aparece ao passar o mouse */}
+      {onReply && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onReply}
+          aria-label="Responder mensagem"
+          className="h-7 w-7 shrink-0 rounded-full text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 max-md:opacity-50 hover:text-foreground hover:bg-muted"
+        >
+          <CornerUpLeft className="h-3.5 w-3.5" />
+        </Button>
+      )}
     </div>
   );
 }
