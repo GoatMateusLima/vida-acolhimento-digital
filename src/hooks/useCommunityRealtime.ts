@@ -19,7 +19,7 @@ export function useCommunityRealtime(communityId: string, myAlias?: string, enab
   const [typingUsers, setTypingUsers] = useState<Array<{ userId: string; alias: string }>>([]);
 
   useEffect(() => {
-    if (!enabled || !communityId) return;
+    if (!enabled || !communityId || !supabase) return;
 
     const myId = window.localStorage.getItem("vidaplus:user_id") || "anon";
 
@@ -107,7 +107,7 @@ export function useCommunityRealtime(communityId: string, myAlias?: string, enab
 
   // Função para expor a mudança de estado de digitação local para o Presence
   const sendTypingStatus = async (typing: boolean) => {
-    if (!communityId) return;
+    if (!communityId || !supabase) return;
     const myId = window.localStorage.getItem("vidaplus:user_id") || "anon";
     const channel = supabase.channel(`community:${communityId}`);
     await channel.track({

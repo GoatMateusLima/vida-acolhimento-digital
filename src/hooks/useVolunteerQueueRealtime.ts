@@ -31,7 +31,7 @@ export function useVolunteerQueueRealtime(enabled = true) {
   }, [qc]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !supabase) return;
 
     // Invalida a query ao conectar para garantir fila atualizada
     refetchQueue();

@@ -12,7 +12,7 @@ export function useChatRealtime(conversationId: string, enabled = true) {
   const [typingUser, setTypingUser] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!enabled || !conversationId) return;
+    if (!enabled || !conversationId || !supabase) return;
 
     // Cria/Assina canal para a conversa específica
     const channel = supabase.channel(`conversation:${conversationId}`, {
