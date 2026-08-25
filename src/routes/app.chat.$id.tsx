@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Send, ShieldAlert, X } from "lucide-react";
+import { CornerUpLeft, Send, ShieldAlert, X } from "lucide-react";
 import { AppShell } from "@/layouts/AppShell";
 import { Button } from "@/components/ui/button";
 import { chatService } from "@/services";
@@ -33,6 +33,7 @@ function Page() {
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [endOpen, setEndOpen] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
@@ -65,8 +66,9 @@ function Page() {
   }, [conversation.data?.status]);
 
   const send = useMutation({
-    mutationFn: (t: string) => chatService.sendMessage(id, t, "user"),
-    onMutate: async (t) => {
+    mutationFn: ({ text, replyToId }: { text: string; replyToId?: string }) =>
+      chatService.sendMessage(id, text, "user", replyToId),
+    onMutate: async ({ text: t, replyToId }) => {
       const tempId = `tmp-${Date.now()}`;
       await qc.cancelQueries({ queryKey: ["messages", id] });
       const prev = qc.getQueryData<ChatMessage[]>(["messages", id]) ?? [];
@@ -81,12 +83,13 @@ function Page() {
             text: t,
             createdAt: new Date().toISOString(),
             status: "sending",
+            replyToId,
           },
         ],
       );
       return { tempId, prev };
     },
-    onSuccess: (msg, _t, ctx) => {
+    onSuccess: (msg, _variables, ctx) => {
       qc.setQueryData<ChatMessage[]>(["messages", id], (curr) => {
         const list = curr ?? [];
         if (list.some((m) => m.id === msg.id)) {
@@ -94,8 +97,9 @@ function Page() {
         }
         return list.map((m) => (m.id === ctx?.tempId ? msg : m));
       });
+      setReplyingTo(null);
     },
-    onError: (_e, _t, ctx) => {
+    onError: (_e, _variables, ctx) => {
       qc.setQueryData<ChatMessage[]>(["messages", id], (curr) =>
         (curr ?? []).map((m) => (m.id === ctx?.tempId ? { ...m, status: "error" } : m)),
       );
@@ -141,7 +145,7 @@ function Page() {
     if (typingTimer.current) clearTimeout(typingTimer.current);
     isTypingRef.current = false;
     chatService.sendTyping(id, false);
-    send.mutate(t);
+    send.mutate({ text: t, replyToId: replyingTo?.id });
   };
 
   return (
@@ -188,9 +192,20 @@ function Page() {
         {/* Messages */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4" aria-live="polite">
           <div className="mx-auto flex max-w-2xl flex-col gap-2.5">
-            {(messages.data ?? []).map((m) => (
-              <Bubble key={m.id} message={m} onRetry={() => send.mutate(m.text)} />
-            ))}
+            {(messages.data ?? []).map((m) => {
+              const replyToMessage = m.replyToId
+                ? (messages.data ?? []).find((msg) => msg.id === m.replyToId)
+                : undefined;
+              return (
+                <Bubble
+                  key={m.id}
+                  message={m}
+                  replyToMessage={replyToMessage}
+                  onRetry={() => send.mutate({ text: m.text, replyToId: m.replyToId })}
+                  onReply={() => setReplyingTo(m)}
+                />
+              );
+            })}
             {messages.isPending && (
               <p className="text-center text-xs text-muted-foreground">Carregando…</p>
             )}
@@ -213,6 +228,25 @@ function Page() {
                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
               </span>
               <span className="font-medium">{typingUser || "Voluntário"} está digitando...</span>
+            </div>
+          )}
+          {replyingTo && (
+            <div className="mx-auto mb-2 flex max-w-2xl items-center justify-between gap-2 rounded-xl border bg-muted/40 px-3 py-2 text-xs text-muted-foreground animate-in fade-in slide-in-from-bottom-1">
+              <div className="border-l-2 border-primary pl-2">
+                <span className="block font-semibold text-[10px] text-primary">
+                  Respondendo a {replyingTo.author === "user" ? "Você" : "Voluntário"}
+                </span>
+                <span className="line-clamp-1">{replyingTo.text}</span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 hover:bg-muted"
+                onClick={() => setReplyingTo(null)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </div>
           )}
           <div className="mx-auto flex max-w-2xl items-end gap-2">
@@ -270,19 +304,56 @@ function Page() {
   );
 }
 
-function Bubble({ message, onRetry }: { message: ChatMessage; onRetry: () => void }) {
+function Bubble({
+  message,
+  replyToMessage,
+  onRetry,
+  onReply,
+}: {
+  message: ChatMessage;
+  replyToMessage?: ChatMessage;
+  onRetry: () => void;
+  onReply?: () => void;
+}) {
   if (message.author === "system") {
     return <p className="my-2 text-center text-xs text-muted-foreground">{message.text}</p>;
   }
   const mine = message.author === "user";
   return (
-    <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
+    <div className={cn("flex group items-center gap-2", mine ? "justify-end flex-row" : "justify-start flex-row-reverse")}>
+      {onReply && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onReply}
+          className="opacity-0 group-hover:opacity-100 max-md:opacity-60 transition-opacity h-8 w-8 rounded-full shrink-0 text-muted-foreground hover:text-foreground"
+        >
+          <CornerUpLeft className="h-4 w-4" />
+        </Button>
+      )}
       <div
         className={cn(
-          "max-w-[85%] rounded-2xl px-3.5 py-2 text-sm shadow-soft",
+          "max-w-[85%] rounded-2xl px-3.5 py-2 text-sm shadow-soft relative",
           mine ? "bg-primary text-primary-foreground" : "bg-card border",
         )}
       >
+        {replyToMessage && (
+          <div className={cn(
+            "mb-1.5 rounded border-l-2 p-1.5 text-xs",
+            mine 
+              ? "border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground/90" 
+              : "border-primary/40 bg-muted/60 text-muted-foreground"
+          )}>
+            <span className={cn(
+              "block font-semibold text-[10px]",
+              mine ? "text-primary-foreground/80" : "text-primary"
+            )}>
+              {replyToMessage.author === "user" ? "Você" : "Voluntário"}
+            </span>
+            <span className="line-clamp-2">{replyToMessage.text}</span>
+          </div>
+        )}
         <p className="whitespace-pre-wrap text-pretty">{message.text}</p>
         <div
           className={cn(

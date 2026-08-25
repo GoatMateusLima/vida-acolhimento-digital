@@ -135,6 +135,7 @@ function mapMessage(input: any): ChatMessage {
     text: input.body ?? input.body_encrypted ?? input.text ?? "",
     createdAt: input.created_at ?? new Date().toISOString(),
     status: "sent",
+    replyToId: input.reply_to_id || undefined,
   };
 }
 
@@ -354,10 +355,11 @@ export const chatService = {
     conversationId: string,
     text: string,
     _author: ChatMessage["author"] = "user",
+    replyToId?: string,
   ): Promise<ChatMessage> {
     const data = await apiData<any>(`/conversations/${conversationId}/messages`, {
       method: "POST",
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, replyToId }),
     });
     return mapMessage(data);
   },

@@ -105,6 +105,7 @@ export function useChatSSE(conversationId: string, enabled = true) {
                         text: raw.body ?? raw.body_encrypted ?? raw.text ?? "",
                         createdAt: raw.created_at ?? new Date().toISOString(),
                         status: "sent",
+                        replyToId: raw.reply_to_id || undefined,
                       };
 
                       qc.setQueryData<ChatMessage[]>(["messages", conversationId], (curr) => {

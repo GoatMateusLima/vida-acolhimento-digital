@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Send, ShieldCheck } from "lucide-react";
+import { AlertTriangle, CornerUpLeft, Send, ShieldCheck, X } from "lucide-react";
 import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ function Page() {
   const [riskLevel, setRiskLevel] = useState("baixo");
   const [riskReason, setRiskReason] = useState("");
   const [ended, setEnded] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
 
   useAuthGuard();
 
@@ -68,7 +69,8 @@ function Page() {
   }, [conversation.data?.status, ended]);
 
   const send = useMutation({
-    mutationFn: (value: string) => chatService.sendMessage(id, value, "volunteer"),
+    mutationFn: ({ text: val, replyToId }: { text: string; replyToId?: string }) =>
+      chatService.sendMessage(id, val, "volunteer", replyToId),
     onMutate: () => {
       setText("");
     },
@@ -78,6 +80,7 @@ function Page() {
         if (existing.some((m) => m.id === message.id)) return existing;
         return [...existing, message];
       });
+      setReplyingTo(null);
       if (typingTimer.current) clearTimeout(typingTimer.current);
       isTypingRef.current = false;
       chatService.sendTyping(id, false);
@@ -156,9 +159,19 @@ function Page() {
               aria-live="polite"
             >
               <div className="mx-auto flex max-w-2xl flex-col gap-3">
-                {(messages.data ?? []).map((message) => (
-                  <VolunteerBubble key={message.id} message={message} />
-                ))}
+                {(messages.data ?? []).map((message) => {
+                  const replyToMessage = message.replyToId
+                    ? (messages.data ?? []).find((msg) => msg.id === message.replyToId)
+                    : undefined;
+                  return (
+                    <VolunteerBubble
+                      key={message.id}
+                      message={message}
+                      replyToMessage={replyToMessage}
+                      onReply={() => setReplyingTo(message)}
+                    />
+                  );
+                })}
                 {messages.isPending && (
                   <p className="text-center text-xs text-muted-foreground">
                     Carregando conversa...
@@ -172,7 +185,7 @@ function Page() {
               onSubmit={(event) => {
                 event.preventDefault();
                 const value = text.trim();
-                if (value) send.mutate(value);
+                if (value) send.mutate({ text: value, replyToId: replyingTo?.id });
               }}
             >
               {isTyping && (
@@ -183,6 +196,25 @@ function Page() {
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
                   </span>
                   <span className="font-medium">{typingUser || "Pessoa acolhida"} está digitando...</span>
+                </div>
+              )}
+              {replyingTo && (
+                <div className="mx-auto mb-2 flex max-w-2xl items-center justify-between gap-2 rounded-xl border bg-muted/40 px-3 py-2 text-xs text-muted-foreground animate-in fade-in slide-in-from-bottom-1">
+                  <div className="border-l-2 border-primary pl-2">
+                    <span className="block font-semibold text-[10px] text-primary">
+                      Respondendo a {replyingTo.author === "user" ? "Pessoa acolhida" : "Você"}
+                    </span>
+                    <span className="line-clamp-1">{replyingTo.text}</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 hover:bg-muted"
+                    onClick={() => setReplyingTo(null)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
                 </div>
               )}
               <div className="mx-auto flex max-w-2xl items-end gap-2">
@@ -198,7 +230,7 @@ function Page() {
                     if (event.key === "Enter" && !event.shiftKey) {
                       event.preventDefault();
                       const value = text.trim();
-                      if (value) send.mutate(value);
+                      if (value) send.mutate({ text: value, replyToId: replyingTo?.id });
                     }
                   }}
                   placeholder="Responda com acolhimento..."
@@ -296,19 +328,54 @@ function Page() {
   );
 }
 
-function VolunteerBubble({ message }: { message: ChatMessage }) {
+function VolunteerBubble({
+  message,
+  replyToMessage,
+  onReply,
+}: {
+  message: ChatMessage;
+  replyToMessage?: ChatMessage;
+  onReply?: () => void;
+}) {
   if (message.author === "system") {
     return <p className="my-1 text-center text-xs text-muted-foreground">{message.text}</p>;
   }
   const mine = message.author === "user";
   return (
-    <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
+    <div className={cn("flex group items-center gap-2", mine ? "justify-end flex-row" : "justify-start flex-row-reverse")}>
+      {onReply && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onReply}
+          className="opacity-0 group-hover:opacity-100 max-md:opacity-60 transition-opacity h-8 w-8 rounded-full shrink-0 text-muted-foreground hover:text-foreground"
+        >
+          <CornerUpLeft className="h-4 w-4" />
+        </Button>
+      )}
       <div
         className={cn(
-          "max-w-[86%] rounded-2xl px-3.5 py-2.5 text-sm",
+          "max-w-[86%] rounded-2xl px-3.5 py-2.5 text-sm relative shadow-soft",
           mine ? "bg-primary text-primary-foreground" : "border bg-card",
         )}
       >
+        {replyToMessage && (
+          <div className={cn(
+            "mb-1.5 rounded border-l-2 p-1.5 text-xs",
+            mine 
+              ? "border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground/90" 
+              : "border-primary/40 bg-muted/60 text-muted-foreground"
+          )}>
+            <span className={cn(
+              "block font-semibold text-[10px]",
+              mine ? "text-primary-foreground/80" : "text-primary"
+            )}>
+              {replyToMessage.author === "user" ? "Pessoa acolhida" : "Você"}
+            </span>
+            <span className="line-clamp-2">{replyToMessage.text}</span>
+          </div>
+        )}
         <p className="whitespace-pre-wrap text-pretty">{message.text}</p>
         <p
           className={cn(

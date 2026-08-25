@@ -22,6 +22,7 @@ export interface ChatMessage {
   text: string;
   createdAt: string;
   status: MessageStatus;
+  replyToId?: string;
 }
 
 export type ConversationStatus = "waiting" | "active" | "ended";
