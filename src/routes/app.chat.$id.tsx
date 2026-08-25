@@ -43,6 +43,7 @@ function Page() {
   const messages = useQuery({
     queryKey: ["messages", id],
     queryFn: () => chatService.getMessages(id),
+    refetchInterval: 3000,
   });
 
   const conversation = useQuery({

@@ -47,6 +47,8 @@ export function useChatRealtime(conversationId: string, enabled = true) {
           if (existing.some((m) => m.id === msg.id)) return existing;
           return [...existing, msg];
         });
+        // Invalida para buscar a versão oficial do servidor (descriptografada)
+        qc.invalidateQueries({ queryKey: ["messages", conversationId] });
       })
       .on("broadcast", { event: "typing" }, ({ payload }) => {
         if (!payload) return;
