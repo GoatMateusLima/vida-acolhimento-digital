@@ -10,7 +10,7 @@ import { communityService, reportService } from "@/services";
 import { fmtRelative } from "@/utils/format";
 import { cn } from "@/lib/utils";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { useCommunitySSE } from "@/hooks/useCommunitySSE";
+import { useCommunityRealtime } from "@/hooks/useCommunityRealtime";
 
 export const Route = createFileRoute("/app/comunidades/$id")({
   head: () => ({ meta: [{ title: "Grupo de apoio — VIDA+" }] }),
@@ -33,8 +33,8 @@ function Page() {
     refetchInterval: 12000,
   });
 
-  // Conexão SSE em tempo real para mensagens, presenças e digitação
-  const { onlineUsers, onlineCount, typingText, isTyping } = useCommunitySSE(
+  // Conexão tempo real para mensagens, presenças e digitação
+  const { onlineUsers, onlineCount, typingText, isTyping } = useCommunityRealtime(
     id,
     group.data?.myAlias,
     !!group.data?.joined

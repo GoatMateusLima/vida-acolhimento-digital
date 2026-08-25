@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import type { VolunteerStatus } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { useVolunteerQueueSSE } from "@/hooks/useVolunteerQueueSSE";
+import { useVolunteerQueueRealtime } from "@/hooks/useVolunteerQueueRealtime";
 
 export const Route = createFileRoute("/vol/")({
   head: () => ({ meta: [{ title: "Painel do voluntário — VIDA+" }] }),
@@ -45,8 +45,8 @@ function Page() {
 
   useAuthGuard();
 
-  // Ativa SSE da fila em tempo real apenas quando o voluntário está online
-  useVolunteerQueueSSE(status === "online");
+  // Ativa tempo real da fila apenas quando o voluntário está online
+  useVolunteerQueueRealtime(status === "online");
 
   const q = useQuery({ queryKey: ["queue"], queryFn: queueService.list });
   const dashboard = useQuery({

@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { useChatSSE } from "@/hooks/useChatSSE";
+import { useChatRealtime } from "@/hooks/useChatRealtime";
 import { http } from "@/services/api/client";
 
 export const Route = createFileRoute("/vol/chat/$id")({
@@ -54,8 +54,8 @@ function Page() {
     refetchInterval: 5000,
   });
 
-  // SSE — recebe mensagens e digitação em tempo real do usuário acolhido
-  const { typingUser, isTyping } = useChatSSE(id);
+  // Tempo real — recebe mensagens e digitação em tempo real do usuário acolhido
+  const { typingUser, isTyping } = useChatRealtime(id);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });

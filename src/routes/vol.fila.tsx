@@ -10,7 +10,7 @@ import { queueService, volunteerService } from "@/services";
 import { fmtRelative } from "@/utils/format";
 import { toast } from "sonner";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { useVolunteerQueueSSE } from "@/hooks/useVolunteerQueueSSE";
+import { useVolunteerQueueRealtime } from "@/hooks/useVolunteerQueueRealtime";
 
 export const Route = createFileRoute("/vol/fila")({
   head: () => ({ meta: [{ title: "Fila completa — VIDA+" }] }),
@@ -21,7 +21,7 @@ function Page() {
   useAuthGuard();
   const navigate = useNavigate();
 
-  useVolunteerQueueSSE(true);
+  useVolunteerQueueRealtime(true);
 
   const q = useQuery({
     queryKey: ["queue"],

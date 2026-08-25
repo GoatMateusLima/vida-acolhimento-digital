@@ -20,7 +20,7 @@ import {
 import type { ChatMessage } from "@/types";
 import { toast } from "sonner";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { useChatSSE } from "@/hooks/useChatSSE";
+import { useChatRealtime } from "@/hooks/useChatRealtime";
 
 export const Route = createFileRoute("/app/chat/$id")({
   head: () => ({ meta: [{ title: "Conversa — VIDA+" }] }),
@@ -51,8 +51,8 @@ function Page() {
     refetchInterval: 5000,
   });
 
-  // SSE — recebe mensagens e eventos de digitação em tempo real do voluntário
-  const { typingUser, isTyping } = useChatSSE(id);
+  // Tempo real — recebe mensagens e eventos de digitação em tempo real do voluntário
+  const { typingUser, isTyping } = useChatRealtime(id);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
