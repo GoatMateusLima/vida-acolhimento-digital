@@ -1,11 +1,14 @@
-import { Link } from "@tanstack/react-router";
-import { Menu, X } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/common/Logo";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { InstallButton } from "@/components/pwa/InstallButton";
 import { Button } from "@/components/ui/button";
+import { useProfile } from "@/contexts/ProfileContext";
+import { authService } from "@/services";
+import { roleHome } from "@/hooks/useAuthGuard";
 
 const NAV = [
   { to: "/", label: "Início" },
@@ -16,6 +19,16 @@ const NAV = [
 
 export function PublicLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const { isAuthenticated, role } = useProfile();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await authService.logout();
+    navigate({ to: "/" });
+    setOpen(false);
+  };
+
+  const dashboardTo = roleHome(role);
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -53,31 +66,59 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             ))}
           </nav>
 
-          {/* Ações direita */}
+            {/* Ações direita */}
           <div className="flex items-center gap-2 justify-self-end">
             <div className="hidden sm:block">
               <InstallButton />
             </div>
             <ThemeToggle />
-            <Link to="/login" className="hidden md:block">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-foreground/60 hover:text-foreground hover:bg-foreground/8 rounded-lg"
-              >
-                Entrar
-              </Button>
-            </Link>
-            <Link to="/cadastro" className="hidden md:block">
-              <Button
-                size="sm"
-                className="rounded-full px-5 font-semibold
-                           bg-primary text-primary-foreground border-0
-                           hover:opacity-90 hover:scale-105 transition-all duration-200"
-              >
-                Cadastrar
-              </Button>
-            </Link>
+
+            {isAuthenticated ? (
+              <>
+                <Link to={dashboardTo} className="hidden md:block">
+                  <Button
+                    size="sm"
+                    className="rounded-full px-5 font-semibold gap-1.5
+                               bg-primary text-primary-foreground border-0
+                               hover:opacity-90 hover:scale-105 transition-all duration-200"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="hidden md:flex items-center gap-1.5 text-foreground/60 hover:text-foreground hover:bg-foreground/8 rounded-lg"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sair
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="hidden md:block">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-foreground/60 hover:text-foreground hover:bg-foreground/8 rounded-lg"
+                  >
+                    Entrar
+                  </Button>
+                </Link>
+                <Link to="/cadastro" className="hidden md:block">
+                  <Button
+                    size="sm"
+                    className="rounded-full px-5 font-semibold
+                               bg-primary text-primary-foreground border-0
+                               hover:opacity-90 hover:scale-105 transition-all duration-200"
+                  >
+                    Cadastrar
+                  </Button>
+                </Link>
+              </>
+            )}
 
             {/* Menu mobile trigger */}
             <button
@@ -126,16 +167,33 @@ export function PublicLayout({ children }: { children: ReactNode }) {
                   </Link>
                 ))}
                 <div className="mt-3 pt-3 border-t border-border/60 flex flex-col gap-2">
-                  <Link to="/login" onClick={() => setOpen(false)}>
-                    <Button variant="outline" className="w-full rounded-xl">
-                      Entrar
-                    </Button>
-                  </Link>
-                  <Link to="/cadastro" onClick={() => setOpen(false)}>
-                    <Button className="w-full rounded-xl font-semibold bg-primary text-primary-foreground border-0">
-                      Cadastrar
-                    </Button>
-                  </Link>
+                  {isAuthenticated ? (
+                    <>
+                      <Link to={dashboardTo} onClick={() => setOpen(false)}>
+                        <Button className="w-full rounded-xl font-semibold bg-primary text-primary-foreground border-0 gap-2">
+                          <LayoutDashboard className="h-4 w-4" />
+                          Dashboard
+                        </Button>
+                      </Link>
+                      <Button variant="outline" className="w-full rounded-xl gap-2" onClick={handleLogout}>
+                        <LogOut className="h-4 w-4" />
+                        Sair da conta
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Link to="/login" onClick={() => setOpen(false)}>
+                        <Button variant="outline" className="w-full rounded-xl">
+                          Entrar
+                        </Button>
+                      </Link>
+                      <Link to="/cadastro" onClick={() => setOpen(false)}>
+                        <Button className="w-full rounded-xl font-semibold bg-primary text-primary-foreground border-0">
+                          Cadastrar
+                        </Button>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </nav>
             </motion.div>
