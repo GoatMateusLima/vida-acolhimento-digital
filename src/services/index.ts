@@ -373,10 +373,10 @@ export const chatService = {
       // silencioso
     }
   },
-  async endConversation(id: string): Promise<{ ok: true }> {
+  async endConversation(id: string, notes?: string): Promise<{ ok: true }> {
     await apiData<unknown>(`/conversations/${id}/close`, {
       method: "POST",
-      body: JSON.stringify({ reason: "usuario_encerrou" }),
+      body: JSON.stringify({ reason: "usuario_encerrou", notes }),
     });
     return { ok: true };
   },

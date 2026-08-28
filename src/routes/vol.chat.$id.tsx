@@ -125,10 +125,10 @@ function Page() {
   });
 
   const endConversation = useMutation({
-    mutationFn: () => chatService.endConversation(id),
+    mutationFn: (notes?: string) => chatService.endConversation(id, notes),
     onSuccess: () => {
-      toast.success("Atendimento encerrado.");
-      setEnded(true);
+      toast.success("Atendimento registrado e encerrado.");
+      navigate({ to: "/vol" });
     },
     onError: () => toast.error("Não foi possível encerrar o atendimento."),
   });
@@ -302,22 +302,21 @@ function Page() {
         <div className="max-w-2xl rounded-2xl border bg-card p-6">
           <h3 className="font-semibold">Registro do atendimento</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Descreva brevemente a ação tomada (sem dados sensíveis).
+            Descreva brevemente a ação tomada (sem dados sensíveis). Este registro fica salvo para consulta futura.
           </p>
           <Textarea
             rows={5}
             className="mt-3"
             value={actionTaken}
             onChange={(e) => setActionTaken(e.target.value)}
+            placeholder="Ex: Usuário relatou ansiedade elevada. Ofereci escuta ativa e técnicas de respiração. Sem sinalização de risco imediato."
           />
           <div className="mt-4 flex gap-2">
             <Button
-              onClick={() => {
-                toast.success("Atendimento registrado.");
-                navigate({ to: "/vol" });
-              }}
+              disabled={endConversation.isPending}
+              onClick={() => endConversation.mutate(actionTaken.trim() || undefined)}
             >
-              Salvar e finalizar
+              {endConversation.isPending ? "Salvando…" : "Salvar e finalizar"}
             </Button>
             <Button variant="ghost" onClick={() => navigate({ to: "/vol" })}>
               Pular
