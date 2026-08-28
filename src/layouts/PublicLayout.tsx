@@ -7,8 +7,8 @@ import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { InstallButton } from "@/components/pwa/InstallButton";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/contexts/ProfileContext";
-import { authService } from "@/services";
 import { roleHome } from "@/hooks/useAuthGuard";
+import { http, clearSession } from "@/services/api/client";
 
 const NAV = [
   { to: "/", label: "Início" },
@@ -19,11 +19,18 @@ const NAV = [
 
 export function PublicLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const { isAuthenticated, role } = useProfile();
+  const { isAuthenticated, role, setAuthenticated, setCurrentUser } = useProfile();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await authService.logout();
+    try {
+      await http("/auth/logout", { method: "POST" });
+    } catch {
+      // ignora erro de rede — limpa sessão mesmo assim
+    }
+    clearSession();
+    setAuthenticated(false);
+    setCurrentUser(null);
     navigate({ to: "/" });
     setOpen(false);
   };
