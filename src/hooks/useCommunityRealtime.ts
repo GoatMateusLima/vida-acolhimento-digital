@@ -101,7 +101,7 @@ export function useCommunityRealtime(communityId: string, myAlias?: string, enab
       });
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase?.removeChannel(channel);
     };
   }, [communityId, myAlias, enabled, qc]);
 

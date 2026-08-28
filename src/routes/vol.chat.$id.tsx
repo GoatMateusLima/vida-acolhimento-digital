@@ -290,10 +290,9 @@ function Page() {
                 variant="destructive"
                 size="sm"
                 className="w-full"
-                disabled={endConversation.isPending}
-                onClick={() => endConversation.mutate()}
+                onClick={() => setEnded(true)}
               >
-                {endConversation.isPending ? "Encerrando…" : "Encerrar atendimento"}
+                Encerrar atendimento
               </Button>
             </div>
           </aside>

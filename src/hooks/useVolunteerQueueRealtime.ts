@@ -74,7 +74,7 @@ export function useVolunteerQueueRealtime(enabled = true) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase?.removeChannel(channel);
     };
   }, [enabled, qc, refetchQueue]);
 

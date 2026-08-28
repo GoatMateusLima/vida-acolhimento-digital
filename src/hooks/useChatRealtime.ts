@@ -64,7 +64,7 @@ export function useChatRealtime(conversationId: string, enabled = true) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase?.removeChannel(channel);
     };
   }, [conversationId, enabled, qc]);
 
