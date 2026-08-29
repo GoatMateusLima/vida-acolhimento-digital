@@ -168,6 +168,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [activeRecipient, setActiveRecipient] = useState<any | null>(null);
   const [modalMessageText, setModalMessageText] = useState("");
+  const [hasUnreadTeamMsg, setHasUnreadTeamMsg] = useState(false);
+
+  useEffect(() => {
+    if (chatOpen && chatView === "conversation" && activeConversationId) {
+      setHasUnreadTeamMsg(false);
+    }
+  }, [chatOpen, chatView, activeConversationId]);
 
   const startTeamChat = useMutation({
     mutationFn: (targetId: string) => chatService.startTeamChat(targetId),
@@ -228,6 +235,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             // Só notifica se não estiver com a conversa aberta no modal
             if (activeConversationId !== newMsg.conversation_id || !chatOpen || chatView !== "conversation") {
+              setHasUnreadTeamMsg(true);
               toast(`Nova mensagem de ${senderName}`, {
                 description: "Clique em abrir para ler a conversa.",
                 action: {
@@ -420,10 +428,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             {/* Botão flutuante no canto */}
             <button
               onClick={() => setChatOpen(!chatOpen)}
-              className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/95 transition-all focus:outline-none cursor-pointer"
+              className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/95 transition-all focus:outline-none cursor-pointer relative"
               aria-label="Abrir chat de equipe"
             >
               {chatOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+              {!chatOpen && hasUnreadTeamMsg && (
+                <span className="absolute top-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-card" />
+              )}
             </button>
 
             {/* Painel do Chat flutuante */}

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
-import { metricsService, volunteerReportService, reportService } from "@/services";
+import { metricsService, volunteerReportService, reportService, chatService } from "@/services";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useState, useMemo } from "react";
 import {
@@ -24,7 +24,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { FileText, ShieldAlert } from "lucide-react";
+import { FileText, ShieldAlert, History } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/")({
@@ -97,6 +97,25 @@ function Page() {
     return (moderatorReports.data ?? []).filter((r) => r.reporterAlias !== "Sistema");
   }, [moderatorReports.data]);
 
+  // Conversas para histórico / auditoria
+  const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
+  
+  const conversationsQuery = useQuery({
+    queryKey: ["admin-conversations"],
+    queryFn: chatService.getConversations,
+  });
+
+  const messagesQuery = useQuery({
+    queryKey: ["admin-conversation-messages", selectedConvId],
+    queryFn: () => chatService.getMessages(selectedConvId!),
+    enabled: !!selectedConvId,
+  });
+
+  // Filtramos apenas as conversas encerradas (e que não sejam team_chat)
+  const endedConversations = useMemo(() => {
+    return (conversationsQuery.data ?? []).filter((c) => c.status === "ended" && !c.isTeamChat);
+  }, [conversationsQuery.data]);
+
   return (
     <AppShell>
       <PageHeader title="Dashboard" description="Visão geral da plataforma." />
@@ -136,12 +155,15 @@ function Page() {
 
       <div className="mt-8">
         <Tabs defaultValue="relatorios-voluntarios">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="relatorios-voluntarios" className="gap-2">
               <FileText className="h-4 w-4" /> Relatórios de Voluntários
             </TabsTrigger>
             <TabsTrigger value="reportes-moderadores" className="gap-2">
               <ShieldAlert className="h-4 w-4" /> Reportes de Moderadores
+            </TabsTrigger>
+            <TabsTrigger value="historico-atendimentos" className="gap-2">
+              <History className="h-4 w-4" /> Histórico de Acolhimentos
             </TabsTrigger>
           </TabsList>
 
@@ -225,6 +247,39 @@ function Page() {
               )}
             </div>
           </TabsContent>
+
+          <TabsContent value="historico-atendimentos" className="space-y-4">
+            <div className="divide-y rounded-2xl border bg-card">
+              {endedConversations.map((c) => (
+                <div key={c.id} className="p-4 flex items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <p className="font-semibold text-sm">
+                      {c.topic || "Acolhimento Emocional"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Acolhido: {c.userAlias} · Voluntário: {c.volunteerAlias || "Não atribuído"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Início: {new Date(c.startedAt).toLocaleString()}
+                      {c.endedAt && ` · Fim: ${new Date(c.endedAt).toLocaleString()}`}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setSelectedConvId(c.id)}
+                  >
+                    Ver Conversa
+                  </Button>
+                </div>
+              ))}
+              {!conversationsQuery.isPending && endedConversations.length === 0 && (
+                <p className="p-6 text-center text-sm text-muted-foreground">
+                  Nenhuma conversa encerrada encontrada.
+                </p>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -292,6 +347,57 @@ function Page() {
               disabled={modReportDecision.trim().length < 5 || resolveModReportMutation.isPending}
             >
               Marcar como Resolvido
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para visualizar histórico completo */}
+      <Dialog open={!!selectedConvId} onOpenChange={(open) => { if (!open) setSelectedConvId(null); }}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Histórico de Acolhimento</DialogTitle>
+            <DialogDescription>
+              Auditoria de mensagens trocadas durante o acolhimento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto space-y-3 py-4 pr-1 min-h-[300px]">
+            {messagesQuery.isPending && (
+              <p className="text-center text-sm text-muted-foreground">Carregando mensagens...</p>
+            )}
+            {messagesQuery.data && messagesQuery.data.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground">Nenhuma mensagem enviada.</p>
+            )}
+            {messagesQuery.data?.map((msg) => {
+              const isSystem = msg.author === "system";
+              const isUser = msg.author === "user";
+              return (
+                <div
+                  key={msg.id}
+                  className={`flex flex-col max-w-[80%] rounded-2xl p-3 text-sm ${
+                    isSystem
+                      ? "mx-auto bg-muted text-muted-foreground text-center text-xs border"
+                      : isUser
+                      ? "mr-auto bg-muted/60 text-card-foreground border"
+                      : "ml-auto bg-primary text-primary-foreground animate-in fade-in"
+                  }`}
+                >
+                  {!isSystem && (
+                    <span className="text-[10px] font-bold opacity-75 mb-0.5 uppercase tracking-wide">
+                      {isUser ? "Pessoa Acolhida" : "Voluntário"}
+                    </span>
+                  )}
+                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                  <span className="text-[9px] opacity-60 mt-1 self-end">
+                    {new Date(msg.createdAt).toLocaleTimeString()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedConvId(null)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>
