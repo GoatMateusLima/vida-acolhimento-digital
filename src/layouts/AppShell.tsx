@@ -82,7 +82,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const client = supabase;
-    if (!client || !meQuery.data?.id || !chatOpen) return;
+    const isStaff = ["voluntario", "moderador", "administrador"].includes(role);
+    if (!client || !meQuery.data?.id || !isStaff) return;
 
     const channel = client.channel("room:staff-presence");
 
@@ -109,7 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => {
       client.removeChannel(channel);
     };
-  }, [meQuery.data?.id, chatOpen]);
+  }, [meQuery.data?.id, role]);
 
   const [chatView, setChatView] = useState<"categories" | "category-list" | "conversation">("categories");
   const [selectedCategory, setSelectedCategory] = useState<"administrador" | "moderador" | "voluntario" | null>(null);
@@ -150,10 +151,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const admins = rawTeamData.filter(u => u.role === "administrador" && u.id !== currentUserId);
   const moderators = rawTeamData.filter(u => u.role === "moderador" && u.id !== currentUserId);
   const volunteers = rawTeamData.filter(u => u.role === "voluntario" && u.id !== currentUserId);
-
-  console.log("[TeamChat Debug] Total raw team users:", rawTeamData.length, rawTeamData);
-  console.log("[TeamChat Debug] Current user ID:", currentUserId);
-  console.log("[TeamChat Debug] Filtered - admins:", admins.length, "moderators:", moderators.length, "volunteers:", volunteers.length);
 
   const modalScrollRef = useRef<HTMLDivElement>(null);
 
