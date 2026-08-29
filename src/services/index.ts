@@ -232,6 +232,7 @@ function mapCommunityMessage(input: any): CommunityMessage {
     createdAt: input.created_at ?? new Date().toISOString(),
     isMine: input.is_mine ?? input.isMine,
     reported: input.reported,
+    senderId: input.sender_id ?? input.senderId,
   };
 }
 
@@ -316,6 +317,20 @@ export const userService = {
     });
     return mapUser(data);
   },
+  async ban(id: string, ban: boolean): Promise<User> {
+    const data = await apiData<any>(`/users/admin/${id}/ban`, {
+      method: "POST",
+      body: JSON.stringify({ ban }),
+    });
+    return mapUser(data);
+  },
+  async getDetails(id: string): Promise<any> {
+    const data = await apiData<any>(`/users/admin/${id}`);
+    return {
+      ...mapUser(data),
+      profile: data.profile,
+    };
+  },
 };
 
 // QUEUE / CHAT ----------------------------------------------------------
@@ -343,6 +358,13 @@ export const queueService = {
         // ignora se já estava encerrada
       }
     }
+    return { ok: true };
+  },
+  async referUser(targetUserId: string): Promise<{ ok: true }> {
+    await apiData<any>("/conversations", {
+      method: "POST",
+      body: JSON.stringify({ targetUserId }),
+    });
     return { ok: true };
   },
 };

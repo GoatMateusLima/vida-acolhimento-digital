@@ -125,6 +125,7 @@ export interface CommunityMessage {
   createdAt: string;
   isMine?: boolean;
   reported?: boolean;
+  senderId?: string;
 }
 
 export interface CommunityIdentity {
