@@ -120,6 +120,8 @@ function mapConversation(input: any): Conversation {
     topic: input.closed_reason ?? "Atendimento emocional",
     priority: input.priority ?? "normal",
     lastMessage: input.last_message,
+    userId: input.user_id,
+    isTeamChat: input.is_team_chat,
   };
 }
 
@@ -299,6 +301,14 @@ export const userService = {
     const data = await apiData<any[]>("/users/admin");
     return data.map((u) => mapUser(u));
   },
+  async listSafe(): Promise<User[]> {
+    const data = await apiData<any[]>("/users");
+    return data.map((u) => mapUser(u));
+  },
+  async listTeam(): Promise<User[]> {
+    const data = await apiData<any[]>("/users/team");
+    return data.map((u) => mapUser(u));
+  },
   async updateRole(id: string, role: User["role"]): Promise<User> {
     const data = await apiData<any>(`/users/admin/${id}/role`, {
       method: "PATCH",
@@ -342,6 +352,13 @@ export const chatService = {
     const data = await apiData<any>("/conversations");
     const list: any[] = Array.isArray(data) ? data : (data.items ?? []);
     return list.map(mapConversation);
+  },
+  async startTeamChat(recipientId: string): Promise<Conversation> {
+    const data = await apiData<any>("/conversations/team", {
+      method: "POST",
+      body: JSON.stringify({ recipientId }),
+    });
+    return mapConversation(data);
   },
   async getConversation(id: string): Promise<Conversation> {
     const data = await apiData<any>(`/conversations/${id}`);
@@ -788,5 +805,54 @@ export const metricsService = {
         conversations: w.conversations ?? w.count ?? 0,
       })),
     };
+  },
+};
+
+import type { VolunteerReport } from "@/types";
+
+function mapVolunteerReport(input: any): VolunteerReport {
+  return {
+    id: input.id,
+    volunteerId: input.volunteer_id,
+    volunteerName: input.volunteer_name,
+    targetUserId: input.target_user_id || undefined,
+    targetUserName: input.target_user_name || undefined,
+    conversationId: input.conversation_id || undefined,
+    title: input.title,
+    description: input.description,
+    status: input.status,
+    adminFeedback: input.admin_feedback || undefined,
+    createdAt: input.created_at ?? new Date().toISOString(),
+    updatedAt: input.updated_at ?? new Date().toISOString(),
+  };
+}
+
+export const volunteerReportService = {
+  async submit(data: {
+    title: string;
+    description: string;
+    targetUserId?: string;
+    conversationId?: string;
+  }): Promise<VolunteerReport> {
+    const response = await apiData<any>("/admin/volunteers/reports", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    return mapVolunteerReport(response);
+  },
+  async getMyReports(): Promise<VolunteerReport[]> {
+    const data = await apiData<any[]>("/admin/volunteers/reports/me");
+    return data.map(mapVolunteerReport);
+  },
+  async listAll(): Promise<VolunteerReport[]> {
+    const data = await apiData<any[]>("/admin/volunteers/reports");
+    return data.map(mapVolunteerReport);
+  },
+  async respond(id: string, adminFeedback: string): Promise<VolunteerReport> {
+    const response = await apiData<any>(`/admin/volunteers/reports/${id}/respond`, {
+      method: "POST",
+      body: JSON.stringify({ adminFeedback }),
+    });
+    return mapVolunteerReport(response);
   },
 };
