@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { ProfileRole, User } from "@/types";
+import { supabase } from "@/lib/supabase";
 
 type Ctx = {
   role: ProfileRole;
@@ -60,6 +61,38 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     window.addEventListener("storage", syncFromStorage);
     return () => window.removeEventListener("storage", syncFromStorage);
   }, []);
+
+  // Sincroniza alteração de cargo (role) em tempo real do banco de dados
+  useEffect(() => {
+    const client = supabase;
+    if (typeof window === "undefined" || !currentUser?.id || !client) return;
+
+    const channel = client
+      .channel(`user-role-change:${currentUser.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "users",
+          filter: `id=eq.${currentUser.id}`,
+        },
+        (payload: any) => {
+          const newRole = payload.new?.role;
+          if (newRole && newRole !== role) {
+            const updatedUser = { ...currentUser, role: newRole as ProfileRole };
+            setCurrentUserState(updatedUser);
+            window.localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+            setRole(newRole as ProfileRole);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [currentUser?.id, role]);
 
   const setRole = (r: ProfileRole) => {
     setRoleState(r);
