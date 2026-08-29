@@ -69,13 +69,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const meQuery = useQuery({
     queryKey: ["me"],
     queryFn: () => userService.me(),
-    enabled: ["voluntario", "moderador", "administrador"].includes(role),
   });
 
   const teamQuery = useQuery({
     queryKey: ["team-users"],
     queryFn: () => userService.listTeam(),
-    enabled: chatOpen && ["voluntario", "moderador", "administrador"].includes(role),
+    enabled: chatOpen,
   });
 
   const [chatView, setChatView] = useState<"categories" | "category-list" | "conversation">("categories");
@@ -110,9 +109,17 @@ export function AppShell({ children }: { children: ReactNode }) {
     },
   });
 
-  const admins = (teamQuery.data ?? []).filter(u => u.role === "administrador" && u.id !== meQuery.data?.id);
-  const moderators = (teamQuery.data ?? []).filter(u => u.role === "moderador" && u.id !== meQuery.data?.id);
-  const volunteers = (teamQuery.data ?? []).filter(u => u.role === "voluntario" && u.id !== meQuery.data?.id);
+  // Debug da listagem e mapeamento para garantir exibição correta
+  const rawTeamData = teamQuery.data ?? [];
+  const currentUserId = meQuery.data?.id;
+
+  const admins = rawTeamData.filter(u => u.role === "administrador" && u.id !== currentUserId);
+  const moderators = rawTeamData.filter(u => u.role === "moderador" && u.id !== currentUserId);
+  const volunteers = rawTeamData.filter(u => u.role === "voluntario" && u.id !== currentUserId);
+
+  console.log("[TeamChat Debug] Total raw team users:", rawTeamData.length, rawTeamData);
+  console.log("[TeamChat Debug] Current user ID:", currentUserId);
+  console.log("[TeamChat Debug] Filtered - admins:", admins.length, "moderators:", moderators.length, "volunteers:", volunteers.length);
 
   const modalScrollRef = useRef<HTMLDivElement>(null);
 
@@ -409,11 +416,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                         <p className="text-[11px] text-muted-foreground text-center py-4">Carregando conversa...</p>
                       )}
                       {(modalMessagesQuery.data ?? []).map((msg: any) => {
-                        const isMine = msg.senderId === meQuery.data?.id || msg.isMine;
+                        const isMine = msg.author === "user";
                         return (
                           <div key={msg.id} className={`flex flex-col max-w-[85%] ${isMine ? "ml-auto items-end" : "mr-auto items-start"}`}>
                             <div className={`px-3 py-1.5 rounded-2xl text-[11px] leading-snug break-words ${isMine ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-card text-card-foreground border rounded-tl-none shadow-sm"}`}>
-                              {msg.body}
+                              {msg.text}
                             </div>
                             <span className="text-[8px] text-muted-foreground mt-0.5 px-1">
                               {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
