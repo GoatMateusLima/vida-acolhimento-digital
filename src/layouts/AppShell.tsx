@@ -16,7 +16,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { Logo } from "@/components/common/Logo";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
@@ -113,6 +113,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const admins = (teamQuery.data ?? []).filter(u => u.role === "administrador" && u.id !== meQuery.data?.id);
   const moderators = (teamQuery.data ?? []).filter(u => u.role === "moderador" && u.id !== meQuery.data?.id);
   const volunteers = (teamQuery.data ?? []).filter(u => u.role === "voluntario" && u.id !== meQuery.data?.id);
+
+  const modalScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatView === "conversation") {
+      modalScrollRef.current?.scrollTo({ top: modalScrollRef.current.scrollHeight, behavior: "smooth" });
+    }
+  }, [modalMessagesQuery.data?.length, chatView]);
 
   async function handleLogout() {
     try {
@@ -267,7 +275,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {/* Botão flutuante no canto */}
             <button
               onClick={() => setChatOpen(!chatOpen)}
-              className="fixed bottom-20 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/95 transition-all focus:outline-none cursor-pointer"
+              className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/95 transition-all focus:outline-none cursor-pointer"
               aria-label="Abrir chat de equipe"
             >
               {chatOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
@@ -275,7 +283,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             {/* Painel do Chat flutuante */}
             {chatOpen && (
-              <div className="fixed bottom-36 right-6 z-50 flex h-[480px] w-80 flex-col rounded-2xl border bg-card text-card-foreground shadow-2xl animate-in fade-in slide-in-from-bottom-5 overflow-hidden">
+              <div className="fixed bottom-24 right-6 z-50 flex h-[480px] w-80 flex-col rounded-2xl border bg-card text-card-foreground shadow-2xl animate-in fade-in slide-in-from-bottom-5 overflow-hidden">
                 {chatView === "categories" && (
                   <div className="flex flex-col h-full">
                     <div className="flex items-center justify-between border-b px-4 py-3 bg-primary text-primary-foreground rounded-t-2xl">
@@ -396,7 +404,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                         <X className="h-4 w-4" />
                       </button>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-muted/20 flex flex-col">
+                    <div ref={modalScrollRef} className="flex-1 overflow-y-auto p-4 space-y-2 bg-muted/20 flex flex-col">
                       {modalMessagesQuery.isPending && (
                         <p className="text-[11px] text-muted-foreground text-center py-4">Carregando conversa...</p>
                       )}
