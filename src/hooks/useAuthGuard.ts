@@ -38,6 +38,10 @@ export function useAuthGuard() {
     }
 
     if (pathname === "/app/preferencias") return;
+    if (pathname.startsWith("/app/comunidades") && role === "voluntario") {
+      navigate({ to: "/vol", replace: true });
+      return;
+    }
     const match = PREFIX_ROLE.find((p) => pathname.startsWith(p.prefix));
     if (!match) return;
 

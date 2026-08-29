@@ -23,6 +23,7 @@ import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { ProfileSwitcher } from "@/components/common/ProfileSwitcher";
 import { InstallButton } from "@/components/pwa/InstallButton";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import type { ProfileRole } from "@/types";
@@ -76,6 +77,39 @@ export function AppShell({ children }: { children: ReactNode }) {
     queryFn: () => userService.listTeam(),
     enabled: chatOpen,
   });
+
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const client = supabase;
+    if (!client || !meQuery.data?.id || !chatOpen) return;
+
+    const channel = client.channel("room:staff-presence");
+
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const activeIds = new Set<string>();
+        Object.values(state).forEach((presences: any) => {
+          presences.forEach((p: any) => {
+            if (p.userId) activeIds.add(p.userId);
+          });
+        });
+        setOnlineUsers(activeIds);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track({
+            userId: meQuery.data.id,
+            onlineAt: new Date().toISOString(),
+          });
+        }
+      });
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [meQuery.data?.id, chatOpen]);
 
   const [chatView, setChatView] = useState<"categories" | "category-list" | "conversation">("categories");
   const [selectedCategory, setSelectedCategory] = useState<"administrador" | "moderador" | "voluntario" | null>(null);
@@ -354,7 +388,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                           className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
                         >
                           <span className="font-medium">{u.name}</span>
-                          <span className="h-2 w-2 rounded-full bg-green-500" />
+                          <span className={`h-2 w-2 rounded-full transition-colors ${onlineUsers.has(u.id) ? "bg-green-500" : "bg-muted-foreground/30"}`} />
                         </button>
                       ))}
                       {selectedCategory === "moderador" && moderators.map(u => (
@@ -368,7 +402,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                           className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
                         >
                           <span className="font-medium">{u.name}</span>
-                          <span className="h-2 w-2 rounded-full bg-green-500" />
+                          <span className={`h-2 w-2 rounded-full transition-colors ${onlineUsers.has(u.id) ? "bg-green-500" : "bg-muted-foreground/30"}`} />
                         </button>
                       ))}
                       {selectedCategory === "voluntario" && volunteers.map(u => (
@@ -382,7 +416,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                           className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
                         >
                           <span className="font-medium">{u.name}</span>
-                          <span className="h-2 w-2 rounded-full bg-green-500" />
+                          <span className={`h-2 w-2 rounded-full transition-colors ${onlineUsers.has(u.id) ? "bg-green-500" : "bg-muted-foreground/30"}`} />
                         </button>
                       ))}
                       {((selectedCategory === "administrador" && admins.length === 0) ||
@@ -404,7 +438,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                         <span className="text-xs opacity-60">|</span>
                         <div className="flex flex-col">
                           <span className="font-semibold text-xs leading-none">{activeRecipient?.name}</span>
-                          <span className="text-[9px] opacity-80 capitalize mt-0.5">{activeRecipient?.role}</span>
+                          <span className="text-[9px] opacity-80 capitalize mt-0.5">
+                            {activeRecipient?.role} · {onlineUsers.has(activeRecipient?.id) ? "online" : "offline"}
+                          </span>
                         </div>
                       </div>
                       <button onClick={() => setChatOpen(false)} aria-label="Fechar painel" className="cursor-pointer">
