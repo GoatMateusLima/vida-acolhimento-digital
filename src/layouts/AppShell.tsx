@@ -428,18 +428,22 @@ export function AppShell({ children }: { children: ReactNode }) {
             {/* Botão flutuante no canto */}
             <button
               onClick={() => setChatOpen(!chatOpen)}
-              className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/95 transition-all focus:outline-none cursor-pointer relative"
+              className="z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/95 transition-all focus:outline-none cursor-pointer"
+              style={{ position: "fixed", bottom: "24px", right: "24px", left: "auto" }}
               aria-label="Abrir chat de equipe"
             >
               {chatOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
               {!chatOpen && hasUnreadTeamMsg && (
-                <span className="absolute top-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-card" />
+                <span className="absolute -top-0.5 -right-0.5 block h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-background animate-pulse" />
               )}
             </button>
 
             {/* Painel do Chat flutuante */}
             {chatOpen && (
-              <div className="fixed bottom-24 right-6 z-50 flex h-[480px] w-80 flex-col rounded-2xl border bg-card text-card-foreground shadow-2xl animate-in fade-in slide-in-from-bottom-5 overflow-hidden">
+              <div 
+                className="z-50 flex h-[480px] w-80 flex-col rounded-2xl border bg-card text-card-foreground shadow-2xl animate-in fade-in slide-in-from-bottom-5 overflow-hidden"
+                style={{ position: "fixed", bottom: "96px", right: "24px", left: "auto" }}
+              >
                 {chatView === "categories" && (
                   <div className="flex flex-col h-full">
                     <div className="flex items-center justify-between border-b px-4 py-3 bg-primary text-primary-foreground rounded-t-2xl">

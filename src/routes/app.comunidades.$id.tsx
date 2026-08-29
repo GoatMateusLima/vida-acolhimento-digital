@@ -6,11 +6,21 @@ import { toast } from "sonner";
 import { AppShell } from "@/layouts/AppShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { communityService, reportService } from "@/services";
+import { communityService, reportService, queueService } from "@/services";
 import { fmtRelative } from "@/utils/format";
 import { cn } from "@/lib/utils";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useCommunityRealtime } from "@/hooks/useCommunityRealtime";
+import { useProfile } from "@/contexts/ProfileContext";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/app/comunidades/$id")({
   head: () => ({ meta: [{ title: "Grupo de apoio — VIDA+" }] }),
@@ -69,6 +79,37 @@ function Page() {
     mutationFn: ({ messageId, alias }: { messageId: string; alias: string }) =>
       reportService.createFromMessage(messageId, alias),
     onSuccess: () => toast.success("Mensagem denunciada. A moderação fará a análise."),
+    onError: (error) => toast.error(error.message),
+  });
+
+  const { role } = useProfile();
+  const [targetMsg, setTargetMsg] = useState<any | null>(null);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+
+  const referUserMutation = useMutation({
+    mutationFn: (targetUserId: string) => queueService.referUser(targetUserId),
+    onSuccess: () => toast.success("Usuário encaminhado para acolhimento na fila com sucesso."),
+    onError: (error) => toast.error(error.message),
+  });
+
+  const reportUserMutation = useMutation({
+    mutationFn: () => {
+      if (!targetMsg || !targetMsg.senderId) throw new Error("Usuário não identificado");
+      return reportService.create({
+        reportedAlias: targetMsg.senderId,
+        reason: reportReason,
+        details: reportDetails,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Denúncia de usuário enviada com sucesso.");
+      setReportModalOpen(false);
+      setReportReason("");
+      setReportDetails("");
+      setTargetMsg(null);
+    },
     onError: (error) => toast.error(error.message),
   });
 
@@ -170,18 +211,47 @@ function Page() {
                   {message.text}
                 </div>
                 {!message.isMine && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm("Denunciar esta mensagem para a moderação?")) {
-                        reportMessage.mutate({ messageId: message.id, alias: message.alias });
-                      }
-                    }}
-                    disabled={reportMessage.isPending}
-                    className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
-                  >
-                    <Flag className="h-3 w-3" /> Denunciar
-                  </button>
+                  <div className="mt-1 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm("Denunciar esta mensagem para a moderação?")) {
+                          reportMessage.mutate({ messageId: message.id, alias: message.alias });
+                        }
+                      }}
+                      disabled={reportMessage.isPending}
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive cursor-pointer"
+                    >
+                      <Flag className="h-3 w-3" /> Denunciar Mensagem
+                    </button>
+
+                    {["moderador", "administrador"].includes(role) && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTargetMsg(message);
+                            setReportModalOpen(true);
+                          }}
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
+                        >
+                          Denunciar Usuário
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (message.senderId && window.confirm(`Encaminhar o usuário "${message.alias}" para atendimento com voluntário?`)) {
+                              referUserMutation.mutate(message.senderId);
+                            }
+                          }}
+                          disabled={referUserMutation.isPending}
+                          className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                        >
+                          Solicitar Acolhimento
+                        </button>
+                      </>
+                    )}
+                  </div>
                 )}
               </article>
             ))}
@@ -278,6 +348,56 @@ function Page() {
           </section>
         </aside>
       </div>
+
+      {/* Dialog para denúncia de usuário (Moderadores/Admins) */}
+      <Dialog open={reportModalOpen} onOpenChange={setReportModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Denunciar Usuário</DialogTitle>
+            <DialogDescription>
+              Abra uma denúncia formal contra o comportamento do usuário "{targetMsg?.alias}".
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Motivo</label>
+              <Input
+                placeholder="Ex: Ofensa, Assédio, Compartilhamento de dados..."
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Detalhes da Denúncia</label>
+              <Textarea
+                placeholder="Descreva o comportamento observado..."
+                rows={4}
+                value={reportDetails}
+                onChange={(e) => setReportDetails(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReportModalOpen(false);
+                setTargetMsg(null);
+                setReportReason("");
+                setReportDetails("");
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => reportUserMutation.mutate()}
+              disabled={!reportReason.trim() || !reportDetails.trim() || reportUserMutation.isPending}
+            >
+              {reportUserMutation.isPending ? "Enviando..." : "Enviar Denúncia"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
