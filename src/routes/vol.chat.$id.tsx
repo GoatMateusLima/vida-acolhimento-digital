@@ -234,36 +234,6 @@ function Page() {
               </div>
             </div>
 
-            {/* Conversas de Equipe */}
-            <div className="border-t pt-3">
-              <h4 className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                <Users className="h-3.5 w-3.5" /> Conversas de Equipe ({conversationsQuery.data?.filter(c => c.isTeamChat).length ?? 0})
-              </h4>
-              <div className="space-y-1">
-                {(conversationsQuery.data ?? [])
-                  .filter(c => c.isTeamChat)
-                  .map(c => (
-                    <Link
-                      key={c.id}
-                      to="/vol/chat/$id"
-                      params={{ id: c.id }}
-                      className={cn(
-                        "block px-3 py-2 text-xs rounded-xl border transition-all hover:bg-muted/40",
-                        c.id === id ? "bg-primary/10 border-primary/25 font-semibold text-primary" : "bg-background/50 border-transparent"
-                      )}
-                    >
-                      <p className="truncate font-semibold">
-                        {c.volunteerAlias === me.data?.nickname ? c.userAlias : c.volunteerAlias}
-                      </p>
-                      {c.lastMessage && <p className="truncate text-[10px] text-muted-foreground mt-0.5">{c.lastMessage}</p>}
-                    </Link>
-                  ))}
-                {conversationsQuery.data?.filter(c => c.isTeamChat).length === 0 && (
-                  <p className="text-[11px] text-muted-foreground italic px-2">Nenhum chat de equipe ativo.</p>
-                )}
-              </div>
-            </div>
-
             {/* Fila Global */}
             <div className="border-t pt-3">
               <h4 className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
@@ -287,35 +257,7 @@ function Page() {
                   <p className="text-[11px] text-muted-foreground italic px-2">Fila vazia.</p>
                 )}
               </div>
-            </div>
-
-            {/* Contatos da Equipe */}
-            <div className="border-t pt-3">
-              <h4 className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                Contatos da Equipe
-              </h4>
-              <div className="space-y-1">
-                {(teamUsersQuery.data ?? [])
-                  .filter(u => u.id !== me.data?.id)
-                  .map(u => (
-                    <button
-                      key={u.id}
-                      onClick={() => startTeamChatMutation.mutate(u.id)}
-                      disabled={startTeamChatMutation.isPending}
-                      className="w-full text-left flex items-center justify-between px-3 py-1.5 text-xs rounded-xl hover:bg-muted/40 transition-colors"
-                    >
-                      <span className="truncate">{u.name}</span>
-                      <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
-                        {u.role === "administrador" ? "Admin" : u.role === "moderador" ? "Mod" : "Vol"}
-                      </span>
-                    </button>
-                  ))}
-                {(teamUsersQuery.data ?? []).filter(u => u.id !== me.data?.id).length === 0 && (
-                  <p className="text-[11px] text-muted-foreground italic px-2">Nenhum outro contato.</p>
-                )}
-              </div>
-            </div>
-          </aside>
+            </div>          </aside>
 
           <div className="flex min-h-[560px] flex-col overflow-hidden rounded-2xl border bg-card shadow-soft">
             <div className="flex items-center gap-3 border-b bg-secondary/35 px-4 py-3">
