@@ -37,6 +37,8 @@ export interface Conversation {
   topic: string;
   priority: QueuePriority;
   lastMessage?: string;
+  userId?: string;
+  isTeamChat?: boolean;
 }
 
 export type QueuePriority = "normal" | "prioritaria" | "crise";
@@ -156,4 +158,19 @@ export interface AdminCommunityMember {
 export interface AdminCommunityDetail extends AdminCommunity {
   members: AdminCommunityMember[];
   messages: CommunityMessage[];
+}
+
+export interface VolunteerReport {
+  id: string;
+  volunteerId: string;
+  volunteerName?: string;
+  targetUserId?: string;
+  targetUserName?: string;
+  conversationId?: string;
+  title: string;
+  description: string;
+  status: "pendente" | "respondido";
+  adminFeedback?: string;
+  createdAt: string;
+  updatedAt: string;
 }

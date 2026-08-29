@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Users, CheckCircle2 } from "lucide-react";
+import { Users, CheckCircle2, FileText } from "lucide-react";
 import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PriorityBadge } from "@/components/common/PriorityBadge";
@@ -13,11 +13,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { applicationService, metricsService, queueService, volunteerService, userService } from "@/services";
+import {
+  applicationService,
+  metricsService,
+  queueService,
+  volunteerService,
+  userService,
+  volunteerReportService,
+  chatService,
+} from "@/services";
 import { fmtRelative } from "@/utils/format";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import type { VolunteerStatus } from "@/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useVolunteerQueueRealtime } from "@/hooks/useVolunteerQueueRealtime";
@@ -71,6 +90,45 @@ function Page() {
     mutationFn: (id: string) => volunteerService.accept(id),
     onSuccess: (d) => navigate({ to: "/vol/chat/$id", params: { id: d.conversationId } }),
     onError: (err: any) => toast.error(err?.message || "Não foi possível aceitar o atendimento."),
+  });
+
+  // Relatórios de voluntário
+  const [reportTitle, setReportTitle] = useState("");
+  const [reportDesc, setReportDesc] = useState("");
+  const [reportConvId, setReportConvId] = useState("");
+  const [reportOpen, setReportOpen] = useState(false);
+
+  const myReports = useQuery({
+    queryKey: ["my-volunteer-reports"],
+    queryFn: () => volunteerReportService.getMyReports(),
+  });
+
+  const myConversations = useQuery({
+    queryKey: ["my-conversations"],
+    queryFn: () => chatService.getConversations(),
+  });
+
+  const submitReport = useMutation({
+    mutationFn: () => {
+      const selectedConv = myConversations.data?.find((c) => c.id === reportConvId);
+      return volunteerReportService.submit({
+        title: reportTitle,
+        description: reportDesc,
+        targetUserId: selectedConv?.userId || undefined,
+        conversationId: reportConvId || undefined,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Relatório enviado com sucesso.");
+      setReportTitle("");
+      setReportDesc("");
+      setReportConvId("");
+      setReportOpen(false);
+      qc.invalidateQueries({ queryKey: ["my-volunteer-reports"] });
+    },
+    onError: () => {
+      toast.error("Não foi possível enviar o relatório.");
+    },
   });
 
   return (
@@ -171,7 +229,104 @@ function Page() {
           </Link>
         </div>
       </section>
-    </AppShell>
+
+      <section className="mt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+            <FileText className="h-5 w-5" /> Relatórios operacionais
+          </h2>
+          <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline">
+                Enviar relatório
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Novo relatório operacional</DialogTitle>
+                <DialogDescription>
+                  Reporte um caso de atendimento ou observação de plantão para a administração.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">Assunto / Título</label>
+                  <Input
+                    placeholder="Ex: Dificuldade de conexão ou Acompanhamento de crise"
+                    value={reportTitle}
+                    onChange={(e) => setReportTitle(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">Vincular Atendimento (Opcional)</label>
+                  <Select value={reportConvId} onValueChange={(v) => setReportConvId(v === "none" ? "" : v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Nenhum atendimento selecionado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum atendimento</SelectItem>
+                      {(myConversations.data ?? []).map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.userAlias} ({new Date(c.startedAt).toLocaleDateString()})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">Descrição Detalhada</label>
+                  <Textarea
+                    placeholder="Descreva detalhadamente o ocorrido..."
+                    rows={4}
+                    value={reportDesc}
+                    onChange={(e) => setReportDesc(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  onClick={() => submitReport.mutate()}
+                  disabled={reportTitle.trim().length < 5 || reportDesc.trim().length < 10 || submitReport.isPending}
+                >
+                  {submitReport.isPending ? "Enviando..." : "Enviar para Admin"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="divide-y rounded-2xl border bg-card">
+          {(myReports.data ?? []).map((r) => (
+            <div key={r.id} className="p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-sm">{r.title}</p>
+                <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
+                  r.status === 'respondido' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {r.status === 'respondido' ? 'Respondido' : 'Pendente'}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Enviado em {new Date(r.createdAt).toLocaleString()} 
+                {r.targetUserName && ` · Usuário: ${r.targetUserName}`}
+              </p>
+              <p className="text-sm text-card-foreground/90 whitespace-pre-wrap">{r.description}</p>
+              {r.adminFeedback && (
+                <div className="mt-2 bg-muted/65 p-3 rounded-xl border border-muted-foreground/10 text-xs">
+                  <p className="font-bold text-muted-foreground uppercase tracking-wider mb-1">Resposta da Administração:</p>
+                  <p className="italic text-muted-foreground/90">{r.adminFeedback}</p>
+                </div>
+              )}
+            </div>
+          ))}
+          {!myReports.isPending && (myReports.data?.length ?? 0) === 0 && (
+            <p className="p-6 text-center text-sm text-muted-foreground">
+              Você ainda não enviou nenhum relatório operacional.
+            </p>
+          )}
+        </div>
+      </section>
+      </AppShell>
   );
 }
 
