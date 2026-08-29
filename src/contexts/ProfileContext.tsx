@@ -94,6 +94,23 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     };
   }, [currentUser?.id, role]);
 
+  // Sincroniza o token de acesso (JWT) com o cliente do Supabase para autorizar o Realtime/Presence
+  useEffect(() => {
+    if (!supabase || typeof window === "undefined") return;
+    const token = window.localStorage.getItem("vidaplus:access_token");
+    const refreshToken = window.localStorage.getItem("vidaplus:refresh_token");
+    if (token) {
+      supabase.auth.setSession({
+        access_token: token,
+        refresh_token: refreshToken || "",
+      }).catch((err) => {
+        console.warn("[Supabase Auth Sync] Erro ao sincronizar sessão:", err.message);
+      });
+    } else {
+      supabase.auth.signOut().catch(() => {});
+    }
+  }, [isAuthenticated]);
+
   const setRole = (r: ProfileRole) => {
     setRoleState(r);
     if (typeof window !== "undefined") window.localStorage.setItem(KEY, r);
