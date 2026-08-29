@@ -91,7 +91,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
         const activeIds = new Set<string>();
-        Object.values(state).forEach((presences: any) => {
+        Object.entries(state).forEach(([key, presences]: [string, any]) => {
+          if (key && key !== "undefined") {
+            activeIds.add(key);
+          }
           presences.forEach((p: any) => {
             if (p.userId) activeIds.add(p.userId);
           });
