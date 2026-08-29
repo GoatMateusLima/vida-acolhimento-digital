@@ -14,6 +14,7 @@ import {
   Settings,
   MoreHorizontal,
   UsersRound,
+  X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -26,6 +27,9 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { cn } from "@/lib/utils";
 import type { ProfileRole } from "@/types";
 import { clearSession, http } from "@/services/api/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { chatService, userService } from "@/services";
+import { toast } from "sonner";
 
 type Item = { to: string; label: string; icon: typeof Home };
 
@@ -58,6 +62,37 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { role, setAuthenticated, setCurrentUser } = useProfile();
   const { pathname } = useLocation();
   const navigate = useNavigate();
+
+  const [chatOpen, setChatOpen] = useState(false);
+  const qc = useQueryClient();
+
+  const meQuery = useQuery({
+    queryKey: ["me"],
+    queryFn: () => userService.me(),
+    enabled: ["voluntario", "moderador", "administrador"].includes(role),
+  });
+
+  const teamQuery = useQuery({
+    queryKey: ["team-users"],
+    queryFn: () => userService.listTeam(),
+    enabled: chatOpen && ["voluntario", "moderador", "administrador"].includes(role),
+  });
+
+  const startTeamChat = useMutation({
+    mutationFn: (targetId: string) => chatService.startTeamChat(targetId),
+    onSuccess: (newConv) => {
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+      setChatOpen(false);
+      navigate({ to: "/vol/chat/$id", params: { id: newConv.id } });
+    },
+    onError: () => {
+      toast.error("Não foi possível iniciar o chat privado com este colega.");
+    },
+  });
+
+  const admins = (teamQuery.data ?? []).filter(u => u.role === "administrador" && u.id !== meQuery.data?.id);
+  const moderators = (teamQuery.data ?? []).filter(u => u.role === "moderador" && u.id !== meQuery.data?.id);
+  const volunteers = (teamQuery.data ?? []).filter(u => u.role === "voluntario" && u.id !== meQuery.data?.id);
 
   async function handleLogout() {
     try {
@@ -206,6 +241,101 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
           </ul>
         </nav>
+
+        {["voluntario", "moderador", "administrador"].includes(role) && (
+          <>
+            {/* Botão flutuante no canto */}
+            <button
+              onClick={() => setChatOpen(!chatOpen)}
+              className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/95 transition-all focus:outline-none cursor-pointer"
+              aria-label="Abrir chat de equipe"
+            >
+              {chatOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+            </button>
+
+            {/* Painel do Chat flutuante */}
+            {chatOpen && (
+              <div className="fixed bottom-24 right-6 z-50 flex h-[480px] w-80 flex-col rounded-2xl border bg-card text-card-foreground shadow-2xl animate-in fade-in slide-in-from-bottom-5">
+                <div className="flex items-center justify-between border-b px-4 py-3 bg-primary text-primary-foreground rounded-t-2xl">
+                  <h3 className="font-semibold text-sm">Contatos da Equipe</h3>
+                  <button onClick={() => setChatOpen(false)} aria-label="Fechar painel" className="cursor-pointer">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {teamQuery.isPending && (
+                    <p className="text-xs text-muted-foreground text-center py-4">Carregando equipe...</p>
+                  )}
+
+                  {/* 1. Administradores */}
+                  {admins.length > 0 && (
+                    <div>
+                      <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Administradores</h4>
+                      <div className="space-y-1">
+                        {admins.map(u => (
+                          <button
+                            key={u.id}
+                            disabled={startTeamChat.isPending}
+                            onClick={() => startTeamChat.mutate(u.id)}
+                            className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
+                          >
+                            <span className="font-medium">{u.name}</span>
+                            <span className="h-2 w-2 rounded-full bg-green-500" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 2. Moderadores */}
+                  {moderators.length > 0 && (
+                    <div className="border-t pt-3">
+                      <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Moderadores</h4>
+                      <div className="space-y-1">
+                        {moderators.map(u => (
+                          <button
+                            key={u.id}
+                            disabled={startTeamChat.isPending}
+                            onClick={() => startTeamChat.mutate(u.id)}
+                            className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
+                          >
+                            <span className="font-medium">{u.name}</span>
+                            <span className="h-2 w-2 rounded-full bg-green-500" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. Voluntários */}
+                  {volunteers.length > 0 && (
+                    <div className="border-t pt-3">
+                      <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Voluntários</h4>
+                      <div className="space-y-1">
+                        {volunteers.map(u => (
+                          <button
+                            key={u.id}
+                            disabled={startTeamChat.isPending}
+                            onClick={() => startTeamChat.mutate(u.id)}
+                            className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
+                          >
+                            <span className="font-medium">{u.name}</span>
+                            <span className="h-2 w-2 rounded-full bg-green-500" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {!teamQuery.isPending && (admins.length + moderators.length + volunteers.length) === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-4">Nenhum outro membro da equipe.</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
