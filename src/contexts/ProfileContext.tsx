@@ -96,18 +96,26 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   // Sincroniza o token de acesso (JWT) com o cliente do Supabase para autorizar o Realtime/Presence
   useEffect(() => {
-    if (!supabase || typeof window === "undefined") return;
+    if (!supabase || typeof window === "undefined") {
+      console.log("[Supabase Auth Sync] Supabase client or window missing.");
+      return;
+    }
     const token = window.localStorage.getItem("vidaplus:access_token");
     const refreshToken = window.localStorage.getItem("vidaplus:refresh_token");
+    console.log("[Supabase Auth Sync] Sincronizando sessão. tokenPresent:", !!token, "isAuthenticated flag:", isAuthenticated);
     if (token) {
       supabase.auth.setSession({
         access_token: token,
         refresh_token: refreshToken || "",
+      }).then(({ data, error }) => {
+        console.log("[Supabase Auth Sync] setSession result. Session user ID:", data?.user?.id, "error:", error?.message);
       }).catch((err) => {
         console.warn("[Supabase Auth Sync] Erro ao sincronizar sessão:", err.message);
       });
     } else {
-      supabase.auth.signOut().catch(() => {});
+      supabase.auth.signOut().then(() => {
+        console.log("[Supabase Auth Sync] signOut completed.");
+      }).catch(() => {});
     }
   }, [isAuthenticated]);
 
