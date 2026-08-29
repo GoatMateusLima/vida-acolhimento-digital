@@ -1,23 +1,13 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  AlertTriangle,
-  CornerUpLeft,
-  Send,
-  ShieldCheck,
-  X,
-  MessageSquare,
-  Clock,
-  Users,
-  ArrowLeft,
-} from "lucide-react";
+import { AlertTriangle, CornerUpLeft, Send, ShieldCheck, X } from "lucide-react";
 import { AppShell } from "@/layouts/AppShell";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { chatService, queueService, userService, volunteerService } from "@/services";
+import { chatService } from "@/services";
 import { fmtTime } from "@/utils/format";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/types";
@@ -63,46 +53,6 @@ function Page() {
     queryKey: ["conversation", id],
     queryFn: () => chatService.getConversation(id),
     refetchInterval: 5000,
-  });
-
-  const me = useQuery({
-    queryKey: ["me"],
-    queryFn: () => userService.me(),
-  });
-
-  const conversationsQuery = useQuery({
-    queryKey: ["conversations"],
-    queryFn: () => chatService.getConversations(),
-    refetchInterval: 5000,
-  });
-
-  const queueQuery = useQuery({
-    queryKey: ["queue"],
-    queryFn: () => queueService.list(),
-    refetchInterval: 5000,
-  });
-
-  const teamUsersQuery = useQuery({
-    queryKey: ["team-users"],
-    queryFn: () => userService.listTeam(),
-    refetchInterval: 15000,
-  });
-
-  const startTeamChatMutation = useMutation({
-    mutationFn: (userId: string) => chatService.startTeamChat(userId),
-    onSuccess: (newConv) => {
-      qc.invalidateQueries({ queryKey: ["conversations"] });
-      navigate({ to: "/vol/chat/$id", params: { id: newConv.id } });
-    },
-    onError: () => {
-      toast.error("Não foi possível iniciar o chat privado com este membro.");
-    },
-  });
-
-  const accept = useMutation({
-    mutationFn: (qid: string) => volunteerService.accept(qid),
-    onSuccess: (d) => navigate({ to: "/vol/chat/$id", params: { id: d.conversationId } }),
-    onError: (err: any) => toast.error(err?.message || "Não foi possível aceitar o atendimento."),
   });
 
   // Tempo real — recebe mensagens e digitação em tempo real do usuário acolhido
@@ -183,155 +133,23 @@ function Page() {
     onError: () => toast.error("Não foi possível encerrar o atendimento."),
   });
 
-  // Se for chat de equipe, altera o cabeçalho
-  const isTeamChat = conversation.data?.isTeamChat;
-  const targetTitle = isTeamChat
-    ? `Conversa Interna de Equipe`
-    : `Atendimento #${id}`;
-  const targetDesc = isTeamChat
-    ? `Comunicação interna direta com membros da equipe.`
-    : `Conversa ativa. Mantenha tom acolhedor, sem julgamentos.`;
-
   return (
     <AppShell>
       <PageHeader
-        title={targetTitle}
-        description={targetDesc}
+        title={`Atendimento #${id}`}
+        description="Conversa ativa. Mantenha tom acolhedor, sem julgamentos."
       />
       {!ended ? (
-        <div className="grid min-h-[620px] gap-4 lg:grid-cols-[300px_minmax(0,1fr)_320px]">
-          {/* BARRA LATERAL MULTICHAT (ESQUERDA) */}
-          <aside className="flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-soft max-h-[680px] overflow-y-auto">
-            <Link to="/vol" className="flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold mb-2">
-              <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao Painel
-            </Link>
-
-            {/* Atendimentos Ativos */}
-            <div>
-              <h4 className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                <MessageSquare className="h-3.5 w-3.5" /> Ativos ({conversationsQuery.data?.filter(c => c.status === "active" && !c.isTeamChat).length ?? 0})
-              </h4>
-              <div className="space-y-1">
-                {(conversationsQuery.data ?? [])
-                  .filter(c => c.status === "active" && !c.isTeamChat)
-                  .map(c => (
-                    <Link
-                      key={c.id}
-                      to="/vol/chat/$id"
-                      params={{ id: c.id }}
-                      className={cn(
-                        "block px-3 py-2 text-xs rounded-xl border transition-all hover:bg-muted/40",
-                        c.id === id ? "bg-primary/10 border-primary/25 font-semibold text-primary" : "bg-background/50 border-transparent"
-                      )}
-                    >
-                      <p className="truncate font-semibold">{c.userAlias}</p>
-                      {c.lastMessage && <p className="truncate text-[10px] text-muted-foreground mt-0.5">{c.lastMessage}</p>}
-                    </Link>
-                  ))}
-                {conversationsQuery.data?.filter(c => c.status === "active" && !c.isTeamChat).length === 0 && (
-                  <p className="text-[11px] text-muted-foreground italic px-2">Nenhum atendimento ativo.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Conversas de Equipe */}
-            <div className="border-t pt-3">
-              <h4 className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                <Users className="h-3.5 w-3.5" /> Conversas de Equipe ({conversationsQuery.data?.filter(c => c.isTeamChat).length ?? 0})
-              </h4>
-              <div className="space-y-1">
-                {(conversationsQuery.data ?? [])
-                  .filter(c => c.isTeamChat)
-                  .map(c => (
-                    <Link
-                      key={c.id}
-                      to="/vol/chat/$id"
-                      params={{ id: c.id }}
-                      className={cn(
-                        "block px-3 py-2 text-xs rounded-xl border transition-all hover:bg-muted/40",
-                        c.id === id ? "bg-primary/10 border-primary/25 font-semibold text-primary" : "bg-background/50 border-transparent"
-                      )}
-                    >
-                      <p className="truncate font-semibold">
-                        {c.volunteerAlias === me.data?.nickname ? c.userAlias : c.volunteerAlias}
-                      </p>
-                      {c.lastMessage && <p className="truncate text-[10px] text-muted-foreground mt-0.5">{c.lastMessage}</p>}
-                    </Link>
-                  ))}
-                {conversationsQuery.data?.filter(c => c.isTeamChat).length === 0 && (
-                  <p className="text-[11px] text-muted-foreground italic px-2">Nenhum chat de equipe ativo.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Fila Global */}
-            <div className="border-t pt-3">
-              <h4 className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                <Clock className="h-3.5 w-3.5" /> Fila Global ({queueQuery.data?.length ?? 0})
-              </h4>
-              <div className="space-y-1">
-                {(queueQuery.data ?? []).map(q => (
-                  <div key={q.id} className="flex items-center justify-between gap-1 px-3 py-2 text-xs rounded-xl border bg-background/50 border-transparent">
-                    <span className="truncate flex-1 font-semibold">{q.alias}</span>
-                    <Button
-                      size="sm"
-                      onClick={() => accept.mutate(q.id)}
-                      disabled={accept.isPending}
-                      className="h-6 px-2 text-[10px]"
-                    >
-                      Aceitar
-                    </Button>
-                  </div>
-                ))}
-                {(queueQuery.data ?? []).length === 0 && (
-                  <p className="text-[11px] text-muted-foreground italic px-2">Fila vazia.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Contatos da Equipe */}
-            <div className="border-t pt-3">
-              <h4 className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                Contatos da Equipe
-              </h4>
-              <div className="space-y-1">
-                {(teamUsersQuery.data ?? [])
-                  .filter(u => u.id !== me.data?.id)
-                  .map(u => (
-                    <button
-                      key={u.id}
-                      onClick={() => startTeamChatMutation.mutate(u.id)}
-                      disabled={startTeamChatMutation.isPending}
-                      className="w-full text-left flex items-center justify-between px-3 py-1.5 text-xs rounded-xl hover:bg-muted/40 transition-colors"
-                    >
-                      <span className="truncate">{u.name}</span>
-                      <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
-                        {u.role === "administrador" ? "Admin" : u.role === "moderador" ? "Mod" : "Vol"}
-                      </span>
-                    </button>
-                  ))}
-                {(teamUsersQuery.data ?? []).filter(u => u.id !== me.data?.id).length === 0 && (
-                  <p className="text-[11px] text-muted-foreground italic px-2">Nenhum outro contato.</p>
-                )}
-              </div>
-            </div>
-          </aside>
-
+        <div className="grid min-h-[620px] gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="flex min-h-[560px] flex-col overflow-hidden rounded-2xl border bg-card shadow-soft">
             <div className="flex items-center gap-3 border-b bg-secondary/35 px-4 py-3">
               <div className="grid h-10 w-10 place-items-center rounded-full bg-primary/15 text-primary">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold">
-                  {isTeamChat
-                    ? (conversation.data?.volunteerAlias === me.data?.nickname
-                      ? conversation.data?.userAlias
-                      : conversation.data?.volunteerAlias || "Membro da Equipe")
-                    : "Pessoa acolhida"}
-                </p>
+                <p className="text-sm font-semibold">Pessoa acolhida</p>
                 <p className="text-xs text-muted-foreground">
-                  {isTeamChat ? "Conversa de Equipe (Segura)" : "Identidade protegida · conversa confidencial"}
+                  Identidade protegida · conversa confidencial
                 </p>
               </div>
             </div>
@@ -432,73 +250,53 @@ function Page() {
             </form>
           </div>
 
-          {!isTeamChat ? (
-            <aside className="h-fit rounded-2xl border bg-card p-5 shadow-soft lg:sticky lg:top-24">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <AlertTriangle className="h-4 w-4 text-warning" /> Sinalizar risco
-              </h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Use apenas em situações de risco potential. Acionará a moderação.
-              </p>
-              <Select value={riskLevel} onValueChange={setRiskLevel}>
-                <SelectTrigger className="mt-4">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="baixo">Baixo</SelectItem>
-                  <SelectItem value="medio">Médio</SelectItem>
-                  <SelectItem value="alto">Alto</SelectItem>
-                  <SelectItem value="imediato">Imediato</SelectItem>
-                </SelectContent>
-              </Select>
-              <Textarea
-                className="mt-3"
-                rows={4}
-                value={riskReason}
-                onChange={(event) => setRiskReason(event.target.value)}
-                placeholder="Descreva objetivamente o sinal observado"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3 w-full"
-                disabled={riskReason.trim().length < 5 || flagRisk.isPending}
-                onClick={() => flagRisk.mutate()}
-              >
-                {flagRisk.isPending ? "Registrando…" : "Registrar sinalização"}
-              </Button>
+          <aside className="h-fit rounded-2xl border bg-card p-5 shadow-soft lg:sticky lg:top-24">
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <AlertTriangle className="h-4 w-4 text-warning" /> Sinalizar risco
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Use apenas em situações de risco potencial. Acionará a moderação.
+            </p>
+            <Select value={riskLevel} onValueChange={setRiskLevel}>
+              <SelectTrigger className="mt-4">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="baixo">Baixo</SelectItem>
+                <SelectItem value="medio">Médio</SelectItem>
+                <SelectItem value="alto">Alto</SelectItem>
+                <SelectItem value="imediato">Imediato</SelectItem>
+              </SelectContent>
+            </Select>
+            <Textarea
+              className="mt-3"
+              rows={4}
+              value={riskReason}
+              onChange={(event) => setRiskReason(event.target.value)}
+              placeholder="Descreva objetivamente o sinal observado"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3 w-full"
+              disabled={riskReason.trim().length < 5 || flagRisk.isPending}
+              onClick={() => flagRisk.mutate()}
+            >
+              {flagRisk.isPending ? "Registrando…" : "Registrar sinalização"}
+            </Button>
 
-              <div className="mt-6 border-t pt-4">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => setEnded(true)}
-                >
-                  Encerrar atendimento
-                </Button>
-              </div>
-            </aside>
-          ) : (
-            <aside className="h-fit rounded-2xl border bg-card p-5 shadow-soft lg:sticky lg:top-24 space-y-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <ShieldCheck className="h-4 w-4 text-primary" /> Chat da Equipe
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Este é um canal direto e seguro de comunicação interna para alinhamento de condutas e apoio mútuo.
-              </p>
-              <div className="border-t pt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => navigate({ to: "/vol" })}
-                >
-                  Voltar ao Início
-                </Button>
-              </div>
-            </aside>
-          )}
+            <div className="mt-6 border-t pt-4">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="w-full"
+                disabled={endConversation.isPending}
+                onClick={() => setEnded(true)}
+              >
+                {endConversation.isPending ? "Encerrando…" : "Encerrar atendimento"}
+              </Button>
+            </div>
+          </aside>
         </div>
       ) : (
         <div className="max-w-2xl rounded-2xl border bg-card p-6">
