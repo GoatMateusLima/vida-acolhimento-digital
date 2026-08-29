@@ -10,6 +10,7 @@ export interface User {
   joinedAt: string;
   avatarColor?: string;
   availabilityStatus?: VolunteerStatus;
+  status?: "ativo" | "banido" | string;
 }
 
 export type MessageStatus = "sending" | "sent" | "error";

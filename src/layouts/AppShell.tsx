@@ -88,26 +88,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     let channelInstance: any = null;
 
     const runSync = async () => {
-      const timestampGetSession = new Date().toISOString();
-      try {
-        const { data: { session } } = await client.auth.getSession();
-        console.log(`[${timestampGetSession}] [Presence Flow] Resultado de supabase.auth.getSession() imediatamente antes da criação do Presence - sessionExists: ${!!session}, userId: ${session?.user?.id || "nenhum"}, expiresAt: ${session?.expires_at || "nenhum"}`);
-      } catch (sessErr: any) {
-        console.warn(`[${timestampGetSession}] [Presence Flow] Erro ao buscar getSession():`, sessErr.message);
-      }
-
-      const timestampCreate = new Date().toISOString();
-      console.log(`[${timestampCreate}] [Presence Flow] Criação do canal 'room:staff-presence'.`);
       const channel = client.channel("room:staff-presence");
       channelInstance = channel;
 
       channel
         .on("presence", { event: "sync" }, () => {
-          const timestampSync = new Date().toISOString();
           const state = channel.presenceState();
-          console.log(`[${timestampSync}] [Presence Flow] Execução do evento presence sync.`);
-          console.log(`[${timestampSync}] [Presence Flow] Resultado completo de channel.presenceState():`, JSON.stringify(state, null, 2));
-          
           const activeIds = new Set<string>();
           Object.entries(state).forEach(([key, presences]: [string, any]) => {
             if (key && key !== "undefined") {
@@ -117,38 +103,18 @@ export function AppShell({ children }: { children: ReactNode }) {
               if (p.userId) activeIds.add(p.userId);
             });
           });
-          
-          console.log(`[${timestampSync}] [Presence Flow] IDs extraídos do estado de Presence:`, Array.from(activeIds));
           setOnlineUsers(activeIds);
-        })
-        .on("presence", { event: "join" }, ({ key, newPresences }) => {
-          const timestampJoin = new Date().toISOString();
-          console.log(`[${timestampJoin}] [Presence Flow] Evento presence join - key: ${key}, newPresences:`, newPresences);
-        })
-        .on("presence", { event: "leave" }, ({ key, leftPresences }) => {
-          const timestampLeave = new Date().toISOString();
-          console.log(`[${timestampLeave}] [Presence Flow] Evento presence leave - key: ${key}, leftPresences:`, leftPresences);
         });
 
-      const timestampSub = new Date().toISOString();
-      console.log(`[${timestampSub}] [Presence Flow] Início do .subscribe().`);
-      channel.subscribe(async (status, err) => {
-        const timestampSubCallback = new Date().toISOString();
-        console.log(`[${timestampSubCallback}] [Presence Flow] Callback do .subscribe() com o status recebido: ${status}, error: ${err?.message || "nenhum"}`);
-        
+      channel.subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
           const uuidLocal = meQuery.data.id;
-          const timestampTrack = new Date().toISOString();
-          console.log(`[${timestampTrack}] [Presence Flow] Executando .track() com UUID local: ${uuidLocal}`);
           try {
-            const trackResult = await channel.track({
+            await channel.track({
               userId: uuidLocal,
               onlineAt: new Date().toISOString(),
             });
-            console.log(`[${timestampTrack}] [Presence Flow] Resultado do .track(): ${trackResult}`);
-          } catch (trackErr: any) {
-            console.error(`[${timestampTrack}] [Presence Flow] Erro na execução do .track():`, trackErr.message);
-          }
+          } catch {}
         }
       });
     };
@@ -156,8 +122,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     runSync();
 
     return () => {
-      const timestampCleanup = new Date().toISOString();
-      console.log(`[${timestampCleanup}] [Presence Flow] Cleanup. Removendo canal 'room:staff-presence'.`);
       if (channelInstance) {
         client.removeChannel(channelInstance);
       }
@@ -498,7 +462,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <div className="flex-1 overflow-y-auto p-4 space-y-1">
                       {selectedCategory === "administrador" && admins.map(u => {
                         const isOnline = onlineUsers.has(u.id);
-                        console.log(`[${new Date().toISOString()}] [Presence Comparison] u.id: ${u.id} (${u.name}), isOnline: ${isOnline}, onlineUsers Set:`, Array.from(onlineUsers));
                         return (
                           <button
                             key={u.id}
@@ -516,7 +479,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                       })}
                       {selectedCategory === "moderador" && moderators.map(u => {
                         const isOnline = onlineUsers.has(u.id);
-                        console.log(`[${new Date().toISOString()}] [Presence Comparison] u.id: ${u.id} (${u.name}), isOnline: ${isOnline}, onlineUsers Set:`, Array.from(onlineUsers));
                         return (
                           <button
                             key={u.id}
@@ -534,7 +496,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                       })}
                       {selectedCategory === "voluntario" && volunteers.map(u => {
                         const isOnline = onlineUsers.has(u.id);
-                        console.log(`[${new Date().toISOString()}] [Presence Comparison] u.id: ${u.id} (${u.name}), isOnline: ${isOnline}, onlineUsers Set:`, Array.from(onlineUsers));
                         return (
                           <button
                             key={u.id}

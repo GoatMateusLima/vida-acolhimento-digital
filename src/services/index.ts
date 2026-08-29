@@ -83,6 +83,7 @@ function mapUser(input: any, emailFallback = ""): User {
     role: mapRole(input?.role ?? input?.app_metadata?.role),
     joinedAt: input?.created_at ?? input?.created_at ?? new Date().toISOString(),
     availabilityStatus: input?.availabilityStatus ?? input?.availability_status,
+    status: input?.status ?? "ativo",
   };
 }
 

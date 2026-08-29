@@ -37,8 +37,8 @@ export function PwaManager() {
             }
           });
         });
-      } catch (error) {
-        console.error("[PWA] Service worker não registrado", error);
+      } catch {
+        // Falha silenciosa de registro de PWA
       }
     };
     void register();

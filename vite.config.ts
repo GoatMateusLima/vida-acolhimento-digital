@@ -17,6 +17,9 @@ export default defineConfig({
   resolve: {
     alias: { "@": "/src" },
   },
+  oxc: {
+    drop: ["console", "debugger"],
+  },
   build: {
     outDir: "dist",
     sourcemap: false,
