@@ -85,33 +85,82 @@ export function AppShell({ children }: { children: ReactNode }) {
     const isStaff = ["voluntario", "moderador", "administrador"].includes(role);
     if (!client || !meQuery.data?.id || !isStaff) return;
 
-    const channel = client.channel("room:staff-presence");
+    let channelInstance: any = null;
 
-    channel
-      .on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState();
-        const activeIds = new Set<string>();
-        Object.entries(state).forEach(([key, presences]: [string, any]) => {
-          if (key && key !== "undefined") {
-            activeIds.add(key);
-          }
-          presences.forEach((p: any) => {
-            if (p.userId) activeIds.add(p.userId);
+    const runSync = async () => {
+      const timestampGetSession = new Date().toISOString();
+      try {
+        const { data: { session } } = await client.auth.getSession();
+        console.log(`[${timestampGetSession}] [Presence Flow] Resultado de supabase.auth.getSession() imediatamente antes da criação do Presence - sessionExists: ${!!session}, userId: ${session?.user?.id || "nenhum"}, expiresAt: ${session?.expires_at || "nenhum"}`);
+      } catch (sessErr: any) {
+        console.warn(`[${timestampGetSession}] [Presence Flow] Erro ao buscar getSession():`, sessErr.message);
+      }
+
+      const timestampCreate = new Date().toISOString();
+      console.log(`[${timestampCreate}] [Presence Flow] Criação do canal 'room:staff-presence'.`);
+      const channel = client.channel("room:staff-presence");
+      channelInstance = channel;
+
+      channel
+        .on("presence", { event: "sync" }, () => {
+          const timestampSync = new Date().toISOString();
+          const state = channel.presenceState();
+          console.log(`[${timestampSync}] [Presence Flow] Execução do evento presence sync.`);
+          console.log(`[${timestampSync}] [Presence Flow] Resultado completo de channel.presenceState():`, JSON.stringify(state, null, 2));
+          
+          const activeIds = new Set<string>();
+          Object.entries(state).forEach(([key, presences]: [string, any]) => {
+            if (key && key !== "undefined") {
+              activeIds.add(key);
+            }
+            presences.forEach((p: any) => {
+              if (p.userId) activeIds.add(p.userId);
+            });
           });
+          
+          console.log(`[${timestampSync}] [Presence Flow] IDs extraídos do estado de Presence:`, Array.from(activeIds));
+          setOnlineUsers(activeIds);
+        })
+        .on("presence", { event: "join" }, ({ key, newPresences }) => {
+          const timestampJoin = new Date().toISOString();
+          console.log(`[${timestampJoin}] [Presence Flow] Evento presence join - key: ${key}, newPresences:`, newPresences);
+        })
+        .on("presence", { event: "leave" }, ({ key, leftPresences }) => {
+          const timestampLeave = new Date().toISOString();
+          console.log(`[${timestampLeave}] [Presence Flow] Evento presence leave - key: ${key}, leftPresences:`, leftPresences);
         });
-        setOnlineUsers(activeIds);
-      })
-      .subscribe(async (status) => {
+
+      const timestampSub = new Date().toISOString();
+      console.log(`[${timestampSub}] [Presence Flow] Início do .subscribe().`);
+      channel.subscribe(async (status, err) => {
+        const timestampSubCallback = new Date().toISOString();
+        console.log(`[${timestampSubCallback}] [Presence Flow] Callback do .subscribe() com o status recebido: ${status}, error: ${err?.message || "nenhum"}`);
+        
         if (status === "SUBSCRIBED") {
-          await channel.track({
-            userId: meQuery.data.id,
-            onlineAt: new Date().toISOString(),
-          });
+          const uuidLocal = meQuery.data.id;
+          const timestampTrack = new Date().toISOString();
+          console.log(`[${timestampTrack}] [Presence Flow] Executando .track() com UUID local: ${uuidLocal}`);
+          try {
+            const trackResult = await channel.track({
+              userId: uuidLocal,
+              onlineAt: new Date().toISOString(),
+            });
+            console.log(`[${timestampTrack}] [Presence Flow] Resultado do .track(): ${trackResult}`);
+          } catch (trackErr: any) {
+            console.error(`[${timestampTrack}] [Presence Flow] Erro na execução do .track():`, trackErr.message);
+          }
         }
       });
+    };
+
+    runSync();
 
     return () => {
-      client.removeChannel(channel);
+      const timestampCleanup = new Date().toISOString();
+      console.log(`[${timestampCleanup}] [Presence Flow] Cleanup. Removendo canal 'room:staff-presence'.`);
+      if (channelInstance) {
+        client.removeChannel(channelInstance);
+      }
     };
   }, [meQuery.data?.id, role]);
   const [chatView, setChatView] = useState<"categories" | "category-list" | "conversation">("categories");
@@ -432,48 +481,60 @@ export function AppShell({ children }: { children: ReactNode }) {
                       </h3>
                     </div>
                     <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                      {selectedCategory === "administrador" && admins.map(u => (
-                        <button
-                          key={u.id}
-                          onClick={() => {
-                            setActiveRecipient(u);
-                            startTeamChat.mutate(u.id);
-                          }}
-                          disabled={startTeamChat.isPending}
-                          className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
-                        >
-                          <span className="font-medium">{u.name}</span>
-                          <span className={`h-2 w-2 rounded-full transition-colors ${onlineUsers.has(u.id) ? "bg-green-500" : "bg-muted-foreground/30"}`} />
-                        </button>
-                      ))}
-                      {selectedCategory === "moderador" && moderators.map(u => (
-                        <button
-                          key={u.id}
-                          onClick={() => {
-                            setActiveRecipient(u);
-                            startTeamChat.mutate(u.id);
-                          }}
-                          disabled={startTeamChat.isPending}
-                          className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
-                        >
-                          <span className="font-medium">{u.name}</span>
-                          <span className={`h-2 w-2 rounded-full transition-colors ${onlineUsers.has(u.id) ? "bg-green-500" : "bg-muted-foreground/30"}`} />
-                        </button>
-                      ))}
-                      {selectedCategory === "voluntario" && volunteers.map(u => (
-                        <button
-                          key={u.id}
-                          onClick={() => {
-                            setActiveRecipient(u);
-                            startTeamChat.mutate(u.id);
-                          }}
-                          disabled={startTeamChat.isPending}
-                          className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
-                        >
-                          <span className="font-medium">{u.name}</span>
-                          <span className={`h-2 w-2 rounded-full transition-colors ${onlineUsers.has(u.id) ? "bg-green-500" : "bg-muted-foreground/30"}`} />
-                        </button>
-                      ))}
+                      {selectedCategory === "administrador" && admins.map(u => {
+                        const isOnline = onlineUsers.has(u.id);
+                        console.log(`[${new Date().toISOString()}] [Presence Comparison] u.id: ${u.id} (${u.name}), isOnline: ${isOnline}, onlineUsers Set:`, Array.from(onlineUsers));
+                        return (
+                          <button
+                            key={u.id}
+                            onClick={() => {
+                              setActiveRecipient(u);
+                              startTeamChat.mutate(u.id);
+                            }}
+                            disabled={startTeamChat.isPending}
+                            className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
+                          >
+                            <span className="font-medium">{u.name}</span>
+                            <span className={`h-2 w-2 rounded-full transition-colors ${isOnline ? "bg-green-500" : "bg-muted-foreground/30"}`} />
+                          </button>
+                        );
+                      })}
+                      {selectedCategory === "moderador" && moderators.map(u => {
+                        const isOnline = onlineUsers.has(u.id);
+                        console.log(`[${new Date().toISOString()}] [Presence Comparison] u.id: ${u.id} (${u.name}), isOnline: ${isOnline}, onlineUsers Set:`, Array.from(onlineUsers));
+                        return (
+                          <button
+                            key={u.id}
+                            onClick={() => {
+                              setActiveRecipient(u);
+                              startTeamChat.mutate(u.id);
+                            }}
+                            disabled={startTeamChat.isPending}
+                            className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
+                          >
+                            <span className="font-medium">{u.name}</span>
+                            <span className={`h-2 w-2 rounded-full transition-colors ${isOnline ? "bg-green-500" : "bg-muted-foreground/30"}`} />
+                          </button>
+                        );
+                      })}
+                      {selectedCategory === "voluntario" && volunteers.map(u => {
+                        const isOnline = onlineUsers.has(u.id);
+                        console.log(`[${new Date().toISOString()}] [Presence Comparison] u.id: ${u.id} (${u.name}), isOnline: ${isOnline}, onlineUsers Set:`, Array.from(onlineUsers));
+                        return (
+                          <button
+                            key={u.id}
+                            onClick={() => {
+                              setActiveRecipient(u);
+                              startTeamChat.mutate(u.id);
+                            }}
+                            disabled={startTeamChat.isPending}
+                            className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer"
+                          >
+                            <span className="font-medium">{u.name}</span>
+                            <span className={`h-2 w-2 rounded-full transition-colors ${isOnline ? "bg-green-500" : "bg-muted-foreground/30"}`} />
+                          </button>
+                        );
+                      })}
                       {((selectedCategory === "administrador" && admins.length === 0) ||
                         (selectedCategory === "moderador" && moderators.length === 0) ||
                         (selectedCategory === "voluntario" && volunteers.length === 0)) && (
