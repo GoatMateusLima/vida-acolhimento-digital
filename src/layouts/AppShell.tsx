@@ -111,7 +111,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       client.removeChannel(channel);
     };
   }, [meQuery.data?.id, role]);
-
   const [chatView, setChatView] = useState<"categories" | "category-list" | "conversation">("categories");
   const [selectedCategory, setSelectedCategory] = useState<"administrador" | "moderador" | "voluntario" | null>(null);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -143,6 +142,62 @@ export function AppShell({ children }: { children: ReactNode }) {
       qc.invalidateQueries({ queryKey: ["modal-messages", activeConversationId] });
     },
   });
+
+  // Escuta novas mensagens de equipe em tempo real para exibir notificações (Toasts)
+  useEffect(() => {
+    const client = supabase;
+    const isStaff = ["voluntario", "moderador", "administrador"].includes(role);
+    if (!client || !meQuery.data?.id || !isStaff) return;
+
+    const channel = client
+      .channel("staff-messages-notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        async (payload: any) => {
+          const newMsg = payload.new;
+          if (!newMsg || newMsg.sender_id === meQuery.data.id) return;
+
+          // Valida se pertence a um chat de equipe
+          const { data: conv } = await client
+            .from("conversations")
+            .select("is_team_chat, user_id, volunteer_id")
+            .eq("id", newMsg.conversation_id)
+            .maybeSingle();
+
+          if (conv?.is_team_chat) {
+            const senderId = conv.user_id === meQuery.data.id ? conv.volunteer_id : conv.user_id;
+            const sender = (teamQuery.data ?? []).find((u) => u.id === senderId);
+            const senderName = sender?.name ?? "Um colega";
+
+            // Só notifica se não estiver com a conversa aberta no modal
+            if (activeConversationId !== newMsg.conversation_id || !chatOpen || chatView !== "conversation") {
+              toast(`Nova mensagem de ${senderName}`, {
+                description: "Clique em abrir para ler a conversa.",
+                action: {
+                  label: "Abrir",
+                  onClick: () => {
+                    if (sender) setActiveRecipient(sender);
+                    setActiveConversationId(newMsg.conversation_id);
+                    setChatView("conversation");
+                    setChatOpen(true);
+                  },
+                },
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [meQuery.data?.id, role, teamQuery.data, activeConversationId, chatOpen, chatView]);
 
   // Debug da listagem e mapeamento para garantir exibição correta
   const rawTeamData = teamQuery.data ?? [];
